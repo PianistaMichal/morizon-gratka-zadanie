@@ -299,6 +299,15 @@ Rozwiązanie: dodanie named volume `symfony-var` dla `/app/var/`, analogicznie j
 
 **Zmieniony plik:** `docker-compose.yml`
 
+### Fix: healthchecks dla baz danych + naprawa pustego stage `base` w Symfony Dockerfile
+
+**docker-compose.yml:**
+- Dodano `healthcheck` (`pg_isready -U postgres`, interval 5s, timeout 5s, retries 5) do `phoenix-db` i `symfony-db`
+- `depends_on` zmieniony z listy na mapę z `condition: service_healthy` dla obu baz; `phoenix` w zależnościach `symfony` ma `condition: service_started`
+
+**symfony-app/Dockerfile:**
+- Przeniesiono `RUN apt-get install` i `COPY --from=composer` z `dev` i `prod` do stage `base` (eliminacja duplikacji)
+
 ---
 
 ### Zadanie 4: Rate-limiting w PhoenixApi (OTP GenServer)

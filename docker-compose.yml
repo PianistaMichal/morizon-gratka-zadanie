@@ -12,6 +12,11 @@ services:
       - phoenix-db-data:/var/lib/postgresql/data
     ports:
       - "5433:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   symfony-db:
     image: postgres:15
@@ -24,14 +29,20 @@ services:
       - symfony-db-data:/var/lib/postgresql/data
     ports:
       - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   phoenix:
-    build: 
+    build:
       context: ./phoenix-api
       dockerfile: Dockerfile
       target: dev
     depends_on:
-      - phoenix-db
+      phoenix-db:
+        condition: service_healthy
     environment:
       DATABASE_URL: ecto://postgres:postgres@phoenix-db/phoenix_api
       DB_HOST: phoenix-db
@@ -49,8 +60,10 @@ services:
       dockerfile: Dockerfile
       target: dev
     depends_on:
-      - symfony-db
-      - phoenix
+      symfony-db:
+        condition: service_healthy
+      phoenix:
+        condition: service_started
     environment:
       APP_ENV: dev
       APP_SECRET: ${SYMFONY_APP_SECRET:-thisisasecret222}

@@ -1,10 +1,11 @@
 FROM php:8.1-cli as base
-FROM base as dev
 
 RUN apt-get update && apt-get install -y git unzip libpq-dev libxml2-dev \
     && docker-php-ext-install pdo pdo_pgsql xml
 
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+
+FROM base as dev
 
 COPY ./entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
@@ -16,11 +17,6 @@ EXPOSE 8000
 ENTRYPOINT ["/entrypoint.sh"]
 
 FROM base as prod
-
-RUN apt-get update && apt-get install -y git unzip libpq-dev libxml2-dev \
-    && docker-php-ext-install pdo pdo_pgsql xml
-
-COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 WORKDIR /app
 COPY . .
