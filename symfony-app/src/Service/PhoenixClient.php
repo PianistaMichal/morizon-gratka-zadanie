@@ -19,6 +19,7 @@ class PhoenixClient implements PhoenixClientInterface
     {
         $response = $this->httpClient->request('GET', $this->baseUrl . '/api/photos', [
             'headers' => ['access-token' => $token],
+            'timeout' => 10.0,
         ]);
 
         if ($response->getStatusCode() === 401) {

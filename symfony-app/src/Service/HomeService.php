@@ -34,9 +34,8 @@ class HomeService
             $currentUser = $this->em->getRepository(User::class)->find($userId);
 
             if ($currentUser) {
-                $this->likeRepository->setUser($currentUser);
                 foreach ($photos as $photo) {
-                    $userLikes[(int) $photo->getId()] = $this->likeRepository->hasUserLikedPhoto($photo);
+                    $userLikes[(int) $photo->getId()] = $this->likeRepository->hasUserLikedPhoto($currentUser, $photo);
                 }
             }
         }

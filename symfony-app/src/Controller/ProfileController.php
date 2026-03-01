@@ -6,10 +6,12 @@ namespace App\Controller;
 
 use App\Enum\FlashType;
 use App\Exception\InvalidPhoenixTokenException;
+use App\Form\PhoenixTokenType;
 use App\Service\FlashService;
 use App\Service\PhoenixClientInterface;
 use App\Service\ProfileService;
 use App\Service\SessionService;
+use Symfony\Component\Form\FormFactoryInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -26,6 +28,7 @@ class ProfileController
         private Environment $twig,
         private FlashService $flashService,
         private PhoenixClientInterface $phoenixClient,
+        private FormFactoryInterface $formFactory,
     ) {
     }
 
@@ -46,7 +49,14 @@ class ProfileController
             return new RedirectResponse($this->router->generate('home'));
         }
 
-        return new Response($this->twig->render('profile/index.html.twig', ['user' => $user]));
+        $tokenForm = $this->formFactory->create(PhoenixTokenType::class, [
+            'phoenix_token' => $user->getPhoenixToken(),
+        ]);
+
+        return new Response($this->twig->render('profile/index.html.twig', [
+            'user' => $user,
+            'tokenForm' => $tokenForm->createView(),
+        ]));
     }
 
     #[Route('/profile/token', name: 'profile_save_token', methods: ['POST'])]
@@ -66,9 +76,17 @@ class ProfileController
             return new RedirectResponse($this->router->generate('home'));
         }
 
-        $token = trim($request->request->getString('phoenix_token'));
-        $this->profileService->savePhoenixToken($user, $token);
-        $this->flashService->add(FlashType::SUCCESS, 'Token dostępu został zapisany.');
+        $form = $this->formFactory->create(PhoenixTokenType::class);
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            /** @var array{phoenix_token: string} $data */
+            $data = $form->getData();
+            $this->profileService->savePhoenixToken($user, $data['phoenix_token']);
+            $this->flashService->add(FlashType::SUCCESS, 'Token dostępu został zapisany.');
+        } else {
+            $this->flashService->add(FlashType::ERROR, 'Nieprawidłowy token.');
+        }
 
         return new RedirectResponse($this->router->generate('profile'));
     }

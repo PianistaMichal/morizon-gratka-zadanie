@@ -70,9 +70,8 @@ class PhotoLikeServiceTest extends TestCase
 
         $this->setupEmRepositories($user, $photo);
 
-        $this->likeRepository->expects($this->once())->method('setUser')->with($user);
-        $this->likeRepository->method('hasUserLikedPhoto')->with($photo)->willReturn(true);
-        $this->likeRepository->expects($this->once())->method('unlikePhoto')->with($photo);
+        $this->likeRepository->method('hasUserLikedPhoto')->with($user, $photo)->willReturn(true);
+        $this->likeRepository->expects($this->once())->method('unlikePhoto')->with($user, $photo);
         $this->likeService->expects($this->never())->method('execute');
 
         $result = $this->photoLikeService->toggle(1, 1);
@@ -87,10 +86,9 @@ class PhotoLikeServiceTest extends TestCase
 
         $this->setupEmRepositories($user, $photo);
 
-        $this->likeRepository->expects($this->once())->method('setUser')->with($user);
-        $this->likeRepository->method('hasUserLikedPhoto')->with($photo)->willReturn(false);
+        $this->likeRepository->method('hasUserLikedPhoto')->with($user, $photo)->willReturn(false);
         $this->likeRepository->expects($this->never())->method('unlikePhoto');
-        $this->likeService->expects($this->once())->method('execute')->with($photo);
+        $this->likeService->expects($this->once())->method('execute')->with($user, $photo);
 
         $result = $this->photoLikeService->toggle(1, 1);
 

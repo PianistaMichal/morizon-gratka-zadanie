@@ -194,6 +194,12 @@
                 <a href="{{ path('logout') }}">🚪 Logout</a>
             </div>
         </div>
+    {% else %}
+        <div class="profile-menu">
+            <a href="{{ path('auth_login_form') }}" class="profile-icon" title="Sign in">
+                🔑
+            </a>
+        </div>
     {% endif %}
     
     <div class="container">

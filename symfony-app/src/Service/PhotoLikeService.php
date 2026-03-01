@@ -25,19 +25,21 @@ class PhotoLikeService
         $user = $this->em->getRepository(User::class)->find($userId);
         $photo = $this->em->getRepository(Photo::class)->find($photoId);
 
+        if ($user === null) {
+            throw new NotFoundHttpException('User not found');
+        }
+
         if ($photo === null) {
             throw new NotFoundHttpException('Photo not found');
         }
 
-        $this->likeRepository->setUser($user);
-
-        if ($this->likeRepository->hasUserLikedPhoto($photo)) {
-            $this->likeRepository->unlikePhoto($photo);
+        if ($this->likeRepository->hasUserLikedPhoto($user, $photo)) {
+            $this->likeRepository->unlikePhoto($user, $photo);
 
             return LikeAction::UNLIKED;
         }
 
-        $this->likeService->execute($photo);
+        $this->likeService->execute($user, $photo);
 
         return LikeAction::LIKED;
     }

@@ -290,17 +290,13 @@
                 <div class="phoenix-token-status">Token dostępu: nie ustawiony</div>
             {% endif %}
 
-            <form action="{{ path('profile_save_token') }}" method="POST" class="token-form">
-                <input
-                    type="text"
-                    name="phoenix_token"
-                    class="token-input"
-                    placeholder="Wpisz token dostępu do PhoenixApi..."
-                    value="{{ user.phoenixToken|default('') }}"
-                    autocomplete="off"
-                >
+            {{ form_start(tokenForm, {action: path('profile_save_token'), method: 'POST', attr: {class: 'token-form'}}) }}
+                {{ form_widget(tokenForm.phoenix_token, {value: user.phoenixToken|default('')}) }}
+                {% if not tokenForm.phoenix_token.vars.valid %}
+                    <span style="color:#d32f2f; font-size:0.85em;">{{ form_errors(tokenForm.phoenix_token) }}</span>
+                {% endif %}
                 <button type="submit" class="btn-save">Zapisz token</button>
-            </form>
+            {{ form_end(tokenForm) }}
 
             <form action="{{ path('profile_import') }}" method="POST">
                 <button type="submit" class="btn-import">⬇ Importuj zdjęcia</button>

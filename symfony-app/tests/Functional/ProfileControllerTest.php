@@ -67,7 +67,7 @@ class ProfileControllerTest extends AbstractWebTestCase
 
     public function testSaveTokenRedirectsWhenNotLoggedIn(): void
     {
-        $this->client->request('POST', '/profile/token', ['phoenix_token' => 'some-token']);
+        $this->client->request('POST', '/profile/token', ['phoenix_token' => ['phoenix_token' => 'some-token']]);
 
         $this->assertResponseRedirects('/');
     }
@@ -76,7 +76,7 @@ class ProfileControllerTest extends AbstractWebTestCase
     {
         $this->loginAs('demo');
 
-        $this->client->request('POST', '/profile/token', ['phoenix_token' => 'test_token_user1_abc123']);
+        $this->client->request('POST', '/profile/token', ['phoenix_token' => ['phoenix_token' => 'test_token_user1_abc123']]);
 
         $this->assertResponseRedirects('/profile');
     }
@@ -85,7 +85,7 @@ class ProfileControllerTest extends AbstractWebTestCase
     {
         $this->loginAs('demo');
 
-        $this->client->request('POST', '/profile/token', ['phoenix_token' => 'test_token_user1_abc123']);
+        $this->client->request('POST', '/profile/token', ['phoenix_token' => ['phoenix_token' => 'test_token_user1_abc123']]);
         $this->client->followRedirect();
         $content = $this->getResponseContent();
 
@@ -114,7 +114,7 @@ class ProfileControllerTest extends AbstractWebTestCase
     {
         $this->loginAs('demo');
 
-        $this->client->request('POST', '/profile/token', ['phoenix_token' => 'bad-token']);
+        $this->client->request('POST', '/profile/token', ['phoenix_token' => ['phoenix_token' => 'bad-token']]);
 
         $this->mockPhoenixClient
             ->method('getPhotos')
@@ -131,7 +131,7 @@ class ProfileControllerTest extends AbstractWebTestCase
     {
         $this->loginAs('demo');
 
-        $this->client->request('POST', '/profile/token', ['phoenix_token' => 'valid-token']);
+        $this->client->request('POST', '/profile/token', ['phoenix_token' => ['phoenix_token' => 'valid-token']]);
 
         $this->mockPhoenixClient
             ->method('getPhotos')

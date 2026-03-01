@@ -30,61 +30,64 @@ class AuthServiceTest extends TestCase
         $this->authService = new AuthService($this->em, $this->sessionService);
     }
 
-    public function testLoginThrowsInvalidTokenExceptionWhenTokenNotFound(): void
-    {
-        $tokenRepo = $this->createMock(EntityRepository::class);
-        $tokenRepo->method('findOneBy')->willReturn(null);
-
-        $this->em->method('getRepository')
-            ->with(AuthToken::class)
-            ->willReturn($tokenRepo);
-
-        $this->expectException(InvalidTokenException::class);
-
-        $this->authService->login('user', 'invalid-token');
-    }
-
     public function testLoginThrowsUserNotFoundExceptionWhenUserDoesNotExist(): void
     {
-        $tokenRepo = $this->createMock(EntityRepository::class);
-        $tokenRepo->method('findOneBy')->willReturn(new AuthToken());
-
         $userRepo = $this->createMock(EntityRepository::class);
         $userRepo->method('findOneBy')->willReturn(null);
 
         $this->em->method('getRepository')
-            ->willReturnMap([
-                [AuthToken::class, $tokenRepo],
-                [User::class, $userRepo],
-            ]);
+            ->with(User::class)
+            ->willReturn($userRepo);
 
         $this->expectException(UserNotFoundException::class);
 
-        $this->authService->login('nonexistent', 'valid-token');
+        $this->authService->login('nonexistent', 'any-token');
     }
 
-    public function testLoginCallsSessionServiceOnSuccess(): void
+    public function testLoginThrowsInvalidTokenExceptionWhenTokenDoesNotBelongToUser(): void
     {
-        $tokenRepo = $this->createMock(EntityRepository::class);
-        $tokenRepo->method('findOneBy')->willReturn(new AuthToken());
-
         $user = $this->createMock(User::class);
-        $user->method('getId')->willReturn(42);
-        $user->method('getUsername')->willReturn('testuser');
 
         $userRepo = $this->createMock(EntityRepository::class);
         $userRepo->method('findOneBy')->willReturn($user);
 
+        $tokenRepo = $this->createMock(EntityRepository::class);
+        // Token not found for this user
+        $tokenRepo->method('findOneBy')->willReturn(null);
+
         $this->em->method('getRepository')
             ->willReturnMap([
-                [AuthToken::class, $tokenRepo],
                 [User::class, $userRepo],
+                [AuthToken::class, $tokenRepo],
+            ]);
+
+        $this->expectException(InvalidTokenException::class);
+
+        $this->authService->login('demo', 'wrong-token');
+    }
+
+    public function testLoginCallsSessionServiceOnSuccess(): void
+    {
+        $user = $this->createMock(User::class);
+        $user->method('getId')->willReturn(42);
+        $user->method('getUsername')->willReturn('demo');
+
+        $userRepo = $this->createMock(EntityRepository::class);
+        $userRepo->method('findOneBy')->willReturn($user);
+
+        $tokenRepo = $this->createMock(EntityRepository::class);
+        $tokenRepo->method('findOneBy')->willReturn(new AuthToken());
+
+        $this->em->method('getRepository')
+            ->willReturnMap([
+                [User::class, $userRepo],
+                [AuthToken::class, $tokenRepo],
             ]);
 
         $this->sessionService->expects($this->once())
             ->method('login')
-            ->with(42, 'testuser');
+            ->with(42, 'demo');
 
-        $this->authService->login('testuser', 'valid-token');
+        $this->authService->login('demo', 'valid-token');
     }
 }

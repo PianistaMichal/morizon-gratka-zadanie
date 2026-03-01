@@ -1,0 +1,102 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Login{% endblock %}
+
+{% block styles %}
+    <style>
+        .login-wrapper {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 60vh;
+        }
+
+        .login-card {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            padding: 40px 48px;
+            width: 100%;
+            max-width: 420px;
+        }
+
+        .login-card h2 {
+            color: #333;
+            font-size: 1.8em;
+            margin-bottom: 8px;
+        }
+
+        .login-card p.subtitle {
+            color: #888;
+            font-size: 0.9em;
+            margin-bottom: 28px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            font-size: 0.85em;
+            font-weight: 600;
+            color: #555;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .form-group input {
+            padding: 10px 14px;
+            border: 1.5px solid #ddd;
+            border-radius: 8px;
+            font-size: 1em;
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+
+        .form-group input:focus {
+            border-color: #667eea;
+        }
+
+        .btn-login {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: opacity 0.2s ease;
+            margin-top: 8px;
+        }
+
+        .btn-login:hover {
+            opacity: 0.9;
+        }
+    </style>
+{% endblock %}
+
+{% block body %}
+    <div class="login-wrapper">
+        <div class="login-card">
+            <h2>Welcome back</h2>
+            <p class="subtitle">Sign in with your username and access token.</p>
+
+            <form method="POST" action="{{ path('auth_login') }}">
+                <div class="form-group">
+                    <label for="username">Username</label>
+                    <input id="username" type="text" name="username" required autofocus placeholder="e.g. john">
+                </div>
+                <div class="form-group">
+                    <label for="token">Access token</label>
+                    <input id="token" type="password" name="token" required placeholder="Your token">
+                </div>
+                <button type="submit" class="btn-login">Sign in</button>
+            </form>
+        </div>
+    </div>
+{% endblock %}

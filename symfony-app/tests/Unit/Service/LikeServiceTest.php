@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace App\Tests\Unit\Service;
 
 use App\Entity\Photo;
+use App\Entity\User;
 use App\Repository\LikeRepositoryInterface;
 use App\Service\LikeService;
-use Exception;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
@@ -26,29 +26,36 @@ class LikeServiceTest extends TestCase
 
     public function testExecuteCallsCreateLikeAndUpdatePhotoCounter(): void
     {
+        $user = new User();
         $photo = $this->createMock(Photo::class);
 
         $this->likeRepository->expects($this->once())
             ->method('createLike')
-            ->with($photo);
+            ->with($user, $photo);
 
         $this->likeRepository->expects($this->once())
             ->method('updatePhotoCounter')
             ->with($photo, 1);
 
-        $this->likeService->execute($photo);
+        $this->likeService->execute($user, $photo);
     }
 
-    public function testExecuteThrowsExceptionWhenRepositoryFails(): void
+    public function testExecuteThrowsRuntimeExceptionWithPreviousWhenRepositoryFails(): void
     {
+        $user = new User();
         $photo = $this->createMock(Photo::class);
 
+        $original = new RuntimeException('DB error');
         $this->likeRepository->method('createLike')
-            ->willThrowException(new RuntimeException('DB error'));
+            ->willThrowException($original);
 
-        $this->expectException(Exception::class);
-        $this->expectExceptionMessage('Something went wrong while liking the photo');
-
-        $this->likeService->execute($photo);
+        try {
+            $this->likeService->execute($user, $photo);
+            $this->fail('Expected RuntimeException was not thrown.');
+        } catch (RuntimeException $e) {
+            $this->assertSame('Something went wrong while liking the photo', $e->getMessage());
+            // Ensure the original exception is preserved for debugging
+            $this->assertSame($original, $e->getPrevious());
+        }
     }
 }

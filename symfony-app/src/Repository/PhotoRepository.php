@@ -46,12 +46,12 @@ class PhotoRepository extends ServiceEntityRepository
             ->orderBy('p.id', 'ASC');
 
         if (!empty($filters['location'])) {
-            $qb->andWhere('p.location LIKE :location')
+            $qb->andWhere('LOWER(p.location) LIKE LOWER(:location)')
                 ->setParameter('location', '%' . $filters['location'] . '%');
         }
 
         if (!empty($filters['camera'])) {
-            $qb->andWhere('p.camera LIKE :camera')
+            $qb->andWhere('LOWER(p.camera) LIKE LOWER(:camera)')
                 ->setParameter('camera', '%' . $filters['camera'] . '%');
         }
 

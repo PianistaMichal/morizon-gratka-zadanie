@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace App\Tests;
 
 use App\DataFixtures\AppFixtures;
+use App\Entity\AuthToken;
 use App\Entity\Photo;
+use App\Entity\User;
 use App\Service\PhoenixClient;
 use Doctrine\Common\DataFixtures\Executor\ORMExecutor;
 use Doctrine\Common\DataFixtures\Purger\ORMPurger;
@@ -15,8 +17,6 @@ use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 
 abstract class AbstractWebTestCase extends WebTestCase
 {
-    private const DEMO_TOKEN = 'demo1234567890abcdef1234567890abcdef1234567890abcdef1234567890ab';
-
     protected KernelBrowser $client;
 
     protected function setUp(): void
@@ -40,13 +40,30 @@ abstract class AbstractWebTestCase extends WebTestCase
     }
 
     /**
-     * Loguje użytkownika przez endpoint /auth korzystając ze znaneego tokenu demo.
-     * Ponieważ AuthService weryfikuje tylko istnienie tokenu (nie jego powiązanie z userem),
-     * można zalogować dowolnego istniejącego użytkownika za pomocą tokenu demo.
+     * Loguje użytkownika przez endpoint POST /login używając tokenu przypisanego do tego użytkownika w bazie.
+     * Każdy użytkownik ma swój własny token — nie można zalogować się cudzym tokenem.
      */
     protected function loginAs(string $username = 'demo'): void
     {
-        $this->client->request('GET', "/auth/{$username}/" . self::DEMO_TOKEN);
+        /** @var EntityManagerInterface $em */
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+
+        $user = $em->getRepository(User::class)->findOneBy(['username' => $username]);
+
+        if ($user === null) {
+            $this->fail("User '{$username}' not found in database. Did you load fixtures?");
+        }
+
+        $authToken = $em->getRepository(AuthToken::class)->findOneBy(['user' => $user]);
+
+        if ($authToken === null) {
+            $this->fail("No AuthToken found for user '{$username}'. Did you load fixtures?");
+        }
+
+        $this->client->request('POST', '/auth', [
+            'username' => $username,
+            'token' => $authToken->getToken(),
+        ]);
     }
 
     /**

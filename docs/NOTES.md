@@ -1,3 +1,68 @@
+## Code review — poprawki (2026-03-01)
+
+### Fix: token powiązany z userem w AuthService
+
+`AuthService::login()` wyszukiwało token i usera osobno — można było zalogować się jako dowolny user za pomocą cudzego tokenu. Zmieniono kolejność: najpierw znajdz usera (`UserNotFoundException`), potem szukaj tokenu po `['token' => $token, 'user' => $user]` (`InvalidTokenException`). Teraz token musi należeć do konkretnego usera.
+
+### Fix: token wyciągnięty z URL do body POST
+
+Endpoint `/auth/{username}/{token}` (GET) zamieniony na `POST /auth` z danymi w body:
+- `username` i `token` przesyłane jako pola POST, nie w ścieżce URL
+- Błędy zwracają właściwe kody HTTP: 401 (zły/cudzy token), 404 (brak usera)
+- Sukces: redirect do strony głównej z flash message
+
+Token nie ląduje już w logach serwera, historii przeglądarki ani nagłówku `Referer`. `AbstractWebTestCase::loginAs()` zaktualizowane — POST do `/auth` z tokenem pobranym z bazy dla danego usera.
+
+### Fix: stateful LikeRepository → stateless
+
+Usunięto `setUser()`/`$user` property z `LikeRepository`. Wszystkie metody interfejsu teraz przyjmują `User $user` jako parametr: `hasUserLikedPhoto(User, Photo)`, `createLike(User, Photo)`, `unlikePhoto(User, Photo)`. `PhotoLikeService` przekazuje usera bezpośrednio do metod, bez pośredniego settera. Zmieniono `LikeRepositoryInterface` i `LikeService::execute(User, Photo)`.
+
+### Fix: spójna case-insensitivity filtrów
+
+`PhotoRepository::findAllWithUsersFiltered()` stosował `LOWER()` tylko dla `description`. Ujednolicono — `location` i `camera` także przez `LOWER(p.X) LIKE LOWER(:X)`.
+
+### Fix: Prod Dockerfile bez dev dependencies
+
+Stage `prod` instalował wszystkie zależności (`composer install`). Zmieniono na `composer install --no-dev --optimize-autoloader --no-interaction` — PHPUnit, PHPStan i CS Fixer nie trafiają na produkcję.
+
+### Fix: LikeService przekazuje previous exception
+
+```php
+// przed:
+throw new Exception('Something went wrong...');
+// po:
+throw new RuntimeException('Something went wrong...', 0, $e);
+```
+Stack trace oryginalnego wyjątku jest teraz zachowany dla debugowania.
+
+### Dodanie PhoenixTokenType (FormType z walidacją)
+
+Formularz zapisu tokenu PhoenixApi korzysta teraz z `PhoenixTokenType` (`src/Form/PhoenixTokenType.php`) z constraint `Length(max: 255)`. Automatyczna ochrona CSRF (`csrf_token_id: 'phoenix_token'`). `ProfileController::saveToken()` wywołuje `$form->isValid()` przed zapisem. Szablon profilu używa `form_start(tokenForm)` + `form_widget(tokenForm.phoenix_token)`.
+
+### Fix: timeout w PhoenixClient
+
+Dodano `'timeout' => 10.0` do żądania HTTP — bez timeoutu wolny Phoenix API mógł zawiesić obsługę requesta na czas nieokreślony.
+
+### Dodanie indeksów na kolumnach filtrowalnych
+
+Nowa migracja `Version20260301120000.php`:
+- `idx_photos_taken_at` — dla zapytań zakresowych (`takenAt >= x AND takenAt < y`)
+- `idx_photos_location`, `idx_photos_camera` — B-tree (użyteczne dla prefix LIKE; dla `%term%` trzeba `pg_trgm` GIN — dodano komentarz w migracji)
+- `idx_users_username` — dla JOIN filtrowania po username
+
+### Dodanie strony logowania (GET /login)
+
+Dodano formularz logowania dostępny w przeglądarce po przeniesieniu tokenu do body POST.
+
+**Nowe/zmienione pliki:**
+- `symfony-app/templates/auth/login.html.twig` — nowy szablon: formularz POST do `/auth` z polami `username` i `token`
+- `symfony-app/src/Controller/AuthController.php` — nowa trasa `GET /login` (`auth_login_form`); dodano wstrzykiwanie `Twig\Environment`
+- `symfony-app/templates/base.html.twig` — dla niezalogowanych użytkowników wyświetlany jest przycisk 🔑 prowadzący do `/login`
+
+**Cel:** wcześniejszy endpoint `/auth` obsługiwał tylko `POST` — nie było jak zalogować się przez przeglądarkę.
+
+---
+
 ## Sposób i stopień wykorzystania AI
 
 Korzystałem z Claude (Anthropic) jako narzędzia wspomagającego — głównie do:
@@ -8,6 +73,16 @@ Korzystałem z Claude (Anthropic) jako narzędzia wspomagającego — głównie 
 Wszystkie decyzje architektoniczne podejmowałem samodzielnie: wybór warstwy serwisów zamiast grubych kontrolerów, rezygnacja z Hexagonal Architecture na rzecz prostszej struktury katalogów spójnej z resztą projektu, projektowanie rate-limitera jako GenServera z sliding-window. Każdy wygenerowany fragment kodu czytałem, rozumiałem i często przerabiałem — szczególnie w miejscach gdzie AI proponowało nadmiarową złożoność (np. pierwotna propozycja rate-limitera używała ETS zamiast stanu GenServera; uprościłem).
 
 Traktuję AI jak para-programistę z dużą pamięcią składniową i zerowym kontekstem biznesowym — przydatny do pisania, bezużyteczny do myślenia.
+
+### Fix: testy ProfileControllerTest — CSRF i format danych formularza
+
+Dwa testy (`testSaveTokenShowsSuccessFlash`, `testImportWithValidTokenImportsPhotos`) nie przechodziły, bo:
+1. CSRF nie było wyłączone w env testowym — formularz `PhoenixTokenType` odrzucał każde żądanie testowe
+2. Testy wysyłały dane w formacie płaskim (`['phoenix_token' => 'value']`), ale Symfony Form oczekuje zagnieżdżonego (`['phoenix_token' => ['phoenix_token' => 'value']]`)
+
+**Zmiany:**
+- `config/packages/test/framework.yaml` — dodano `csrf_protection: false`
+- `tests/Functional/ProfileControllerTest.php` — wszystkie POSTy do `/profile/token` zaktualizowane do zagnieżdżonego formatu
 
 ---
 

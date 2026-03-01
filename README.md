@@ -20,23 +20,36 @@ I patrz aż wszystko się zainstaluje i server http zacznie nasłuchiwać
 
 ## Logowanie do Symfony App
 
-Aplikacja nie posiada formularza logowania. Zamiast tego logowanie odbywa się przez specjalny URL:
-
-```
-http://localhost:8000/auth/{username}/{token}
-```
-
-Po załadowaniu fixtures dostępne jest gotowe konto z **predefiniowanym tokenem**:
+Otwórz http://localhost:8000/login w przeglądarce i zaloguj się danymi konta demo:
 
 - **Username:** `demo`
 - **Token:** `demo1234567890abcdef1234567890abcdef1234567890abcdef1234567890ab`
 
-Bezpośredni link do logowania:
+Alternatywnie przez curl:
+
+```bash
+# bash / Git Bash / WSL
+curl -X POST http://localhost:8000/auth \
+  -d "username=demo" \
+  -d "token=demo1234567890abcdef1234567890abcdef1234567890abcdef1234567890ab"
 ```
-http://localhost:8000/auth/demo/demo1234567890abcdef1234567890abcdef1234567890abcdef1234567890ab
+
+```powershell
+# PowerShell — curl to alias na Invoke-WebRequest, użyj curl.exe
+curl.exe -X POST http://localhost:8000/auth -d "username=demo&token=demo1234567890abcdef1234567890abcdef1234567890abcdef1234567890ab"
 ```
 
 Wylogowanie: http://localhost:8000/logout
+
+## Wsparcie IDE (autouzupełnianie klas Symfony/Doctrine)
+
+`vendor/` żyje w Docker named volume i nie jest widoczny na hoście. Żeby IDE rozpoznawało klasy, skopiuj go z kontenera.
+
+```bash
+docker cp rekrutacja-gratka-symfony-1:/app/vendor symfony-app/vendor
+```
+
+Uruchamiaj po każdym `docker-compose exec symfony composer require/update`.
 
 ## Testy
 

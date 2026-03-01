@@ -19,19 +19,25 @@ class AuthService
     }
 
     /**
-     * @throws InvalidTokenException
      * @throws UserNotFoundException
+     * @throws InvalidTokenException
      */
     public function login(string $username, string $token): void
     {
-        if ($this->em->getRepository(AuthToken::class)->findOneBy(['token' => $token]) === null) {
-            throw new InvalidTokenException();
-        }
-
         $user = $this->em->getRepository(User::class)->findOneBy(['username' => $username]);
 
         if ($user === null) {
             throw new UserNotFoundException($username);
+        }
+
+        // Token must belong to the requesting user, not just exist in the database.
+        $authToken = $this->em->getRepository(AuthToken::class)->findOneBy([
+            'token' => $token,
+            'user' => $user,
+        ]);
+
+        if ($authToken === null) {
+            throw new InvalidTokenException();
         }
 
         $userId = $user->getId();

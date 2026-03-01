@@ -12,16 +12,22 @@ class AuthControllerTest extends AbstractWebTestCase
 
     private const INVALID_TOKEN = 'invalidtoken000000000000000000000000000000000000000000000000000000';
 
-    public function testLoginWithValidCredentials(): void
+    public function testLoginWithValidCredentialsRedirects(): void
     {
-        $this->client->request('GET', '/auth/demo/' . self::DEMO_TOKEN);
+        $this->client->request('POST', '/auth', [
+            'username' => 'demo',
+            'token' => self::DEMO_TOKEN,
+        ]);
 
         $this->assertResponseRedirects('/');
     }
 
     public function testLoginSetsSessionAndRedirects(): void
     {
-        $this->client->request('GET', '/auth/demo/' . self::DEMO_TOKEN);
+        $this->client->request('POST', '/auth', [
+            'username' => 'demo',
+            'token' => self::DEMO_TOKEN,
+        ]);
         $this->client->followRedirect();
 
         $this->assertResponseIsSuccessful();
@@ -29,18 +35,36 @@ class AuthControllerTest extends AbstractWebTestCase
 
     public function testLoginWithInvalidTokenReturns401(): void
     {
-        $this->client->request('GET', '/auth/demo/' . self::INVALID_TOKEN);
+        $this->client->request('POST', '/auth', [
+            'username' => 'demo',
+            'token' => self::INVALID_TOKEN,
+        ]);
 
         $this->assertResponseStatusCodeSame(401);
         $this->assertStringContainsString('Invalid token', $this->getResponseContent());
     }
 
-    public function testLoginWithValidTokenButNonexistentUserReturns404(): void
+    public function testLoginWithNonexistentUserReturns404(): void
     {
-        $this->client->request('GET', '/auth/nonexistent_user/' . self::DEMO_TOKEN);
+        $this->client->request('POST', '/auth', [
+            'username' => 'nonexistent_user',
+            'token' => self::DEMO_TOKEN,
+        ]);
 
         $this->assertResponseStatusCodeSame(404);
         $this->assertStringContainsString('User not found', $this->getResponseContent());
+    }
+
+    public function testLoginWithTokenBelongingToAnotherUserReturns401(): void
+    {
+        // DEMO_TOKEN belongs to 'demo', not 'nature_lover' — must be rejected
+        $this->client->request('POST', '/auth', [
+            'username' => 'nature_lover',
+            'token' => self::DEMO_TOKEN,
+        ]);
+
+        $this->assertResponseStatusCodeSame(401);
+        $this->assertStringContainsString('Invalid token', $this->getResponseContent());
     }
 
     public function testLogoutRedirectsToHome(): void
@@ -61,13 +85,6 @@ class AuthControllerTest extends AbstractWebTestCase
 
         // Po wylogowaniu /profile powinno przekierować do strony głównej
         $this->client->request('GET', '/profile');
-        $this->assertResponseRedirects('/');
-    }
-
-    public function testLoginWithAnotherExistingUser(): void
-    {
-        $this->client->request('GET', '/auth/nature_lover/' . self::DEMO_TOKEN);
-
         $this->assertResponseRedirects('/');
     }
 }

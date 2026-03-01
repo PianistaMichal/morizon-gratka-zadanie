@@ -47,7 +47,6 @@ class HomeServiceTest extends TestCase
         $this->assertSame($photos, $result['photos']);
         $this->assertNull($result['currentUser']);
         $this->assertSame([], $result['userLikes']);
-        $this->likeRepository->expects($this->never())->method('setUser');
     }
 
     public function testGetPhotosDataReturnsPhotosWithUserLikesWhenLoggedIn(): void
@@ -63,8 +62,7 @@ class HomeServiceTest extends TestCase
         $userRepo->method('find')->with(1)->willReturn($user);
         $this->em->method('getRepository')->with(User::class)->willReturn($userRepo);
 
-        $this->likeRepository->expects($this->once())->method('setUser')->with($user);
-        $this->likeRepository->method('hasUserLikedPhoto')->with($photo)->willReturn(true);
+        $this->likeRepository->method('hasUserLikedPhoto')->with($user, $photo)->willReturn(true);
 
         $result = $this->homeService->getPhotosData(1);
 
@@ -81,8 +79,6 @@ class HomeServiceTest extends TestCase
         $userRepo = $this->createMock(EntityRepository::class);
         $userRepo->method('find')->willReturn(null);
         $this->em->method('getRepository')->with(User::class)->willReturn($userRepo);
-
-        $this->likeRepository->expects($this->never())->method('setUser');
 
         $result = $this->homeService->getPhotosData(999);
 
