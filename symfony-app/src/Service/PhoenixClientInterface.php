@@ -9,8 +9,9 @@ use App\Exception\InvalidPhoenixTokenException;
 interface PhoenixClientInterface
 {
     /**
-     * @return array<array{photo_url: string}>
      * @throws InvalidPhoenixTokenException
+     *
+     * @return array<array{photo_url: string}>
      */
     public function getPhotos(string $token): array;
 }

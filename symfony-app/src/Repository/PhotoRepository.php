@@ -8,6 +8,9 @@ use App\Entity\Photo;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
+/**
+ * @extends ServiceEntityRepository<Photo>
+ */
 class PhotoRepository extends ServiceEntityRepository
 {
     public function __construct(ManagerRegistry $registry)
@@ -15,6 +18,9 @@ class PhotoRepository extends ServiceEntityRepository
         parent::__construct($registry, Photo::class);
     }
 
+    /**
+     * @return Photo[]
+     */
     public function findAllWithUsers(): array
     {
         return $this->createQueryBuilder('p')
@@ -25,6 +31,11 @@ class PhotoRepository extends ServiceEntityRepository
             ->getResult();
     }
 
+    /**
+     * @param array<string, string> $filters
+     *
+     * @return Photo[]
+     */
     public function findAllWithUsersFiltered(array $filters): array
     {
         $qb = $this->createQueryBuilder('p')

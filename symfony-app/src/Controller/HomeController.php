@@ -17,7 +17,8 @@ class HomeController
         private HomeService $homeService,
         private SessionService $sessionService,
         private Environment $twig,
-    ) {}
+    ) {
+    }
 
     #[Route('/', name: 'home')]
     public function index(Request $request): Response
@@ -25,11 +26,11 @@ class HomeController
         $userId = $this->sessionService->getUserId();
 
         $filters = array_filter([
-            'location'    => $request->query->get('location', ''),
-            'camera'      => $request->query->get('camera', ''),
+            'location' => $request->query->get('location', ''),
+            'camera' => $request->query->get('camera', ''),
             'description' => $request->query->get('description', ''),
-            'taken_at'    => $request->query->get('taken_at', ''),
-            'username'    => $request->query->get('username', ''),
+            'taken_at' => $request->query->get('taken_at', ''),
+            'username' => $request->query->get('username', ''),
         ]);
 
         $data = $this->homeService->getPhotosData($userId, $filters);

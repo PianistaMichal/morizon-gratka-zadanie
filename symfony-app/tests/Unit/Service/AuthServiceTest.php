@@ -18,7 +18,9 @@ use PHPUnit\Framework\TestCase;
 class AuthServiceTest extends TestCase
 {
     private EntityManagerInterface&MockObject $em;
+
     private SessionService&MockObject $sessionService;
+
     private AuthService $authService;
 
     protected function setUp(): void

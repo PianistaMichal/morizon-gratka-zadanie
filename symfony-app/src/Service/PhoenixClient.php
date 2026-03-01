@@ -12,7 +12,8 @@ class PhoenixClient implements PhoenixClientInterface
     public function __construct(
         private HttpClientInterface $httpClient,
         private string $baseUrl,
-    ) {}
+    ) {
+    }
 
     public function getPhotos(string $token): array
     {

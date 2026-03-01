@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Service;
 
-use App\Service\PhoenixClientInterface;
 use App\Entity\Photo;
 use App\Entity\User;
 use Doctrine\ORM\EntityManagerInterface;
@@ -13,7 +12,8 @@ class ProfileService
 {
     public function __construct(
         private EntityManagerInterface $em,
-    ) {}
+    ) {
+    }
 
     public function findUser(int $userId): ?User
     {
@@ -35,7 +35,7 @@ class ProfileService
             $photo = (new Photo())->setImageUrl($photoData['photo_url']);
             $user->addPhoto($photo);
             $this->em->persist($photo);
-            $count++;
+            ++$count;
         }
 
         $this->em->flush();

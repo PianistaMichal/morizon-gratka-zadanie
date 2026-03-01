@@ -9,6 +9,7 @@ use App\Tests\AbstractWebTestCase;
 class AuthControllerTest extends AbstractWebTestCase
 {
     private const DEMO_TOKEN = 'demo1234567890abcdef1234567890abcdef1234567890abcdef1234567890ab';
+
     private const INVALID_TOKEN = 'invalidtoken000000000000000000000000000000000000000000000000000000';
 
     public function testLoginWithValidCredentials(): void
@@ -31,7 +32,7 @@ class AuthControllerTest extends AbstractWebTestCase
         $this->client->request('GET', '/auth/demo/' . self::INVALID_TOKEN);
 
         $this->assertResponseStatusCodeSame(401);
-        $this->assertStringContainsString('Invalid token', $this->client->getResponse()->getContent());
+        $this->assertStringContainsString('Invalid token', $this->getResponseContent());
     }
 
     public function testLoginWithValidTokenButNonexistentUserReturns404(): void
@@ -39,7 +40,7 @@ class AuthControllerTest extends AbstractWebTestCase
         $this->client->request('GET', '/auth/nonexistent_user/' . self::DEMO_TOKEN);
 
         $this->assertResponseStatusCodeSame(404);
-        $this->assertStringContainsString('User not found', $this->client->getResponse()->getContent());
+        $this->assertStringContainsString('User not found', $this->getResponseContent());
     }
 
     public function testLogoutRedirectsToHome(): void

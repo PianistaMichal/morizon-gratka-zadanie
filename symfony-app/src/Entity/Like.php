@@ -32,6 +32,11 @@ class Like
         $this->createdAt = new \DateTime();
     }
 
+    public function getId(): ?int
+    {
+        return $this->id;
+    }
+
     public function getUser(): User
     {
         return $this->user;
@@ -40,6 +45,7 @@ class Like
     public function setUser(User $user): self
     {
         $this->user = $user;
+
         return $this;
     }
 
@@ -51,6 +57,7 @@ class Like
     public function setPhoto(Photo $photo): self
     {
         $this->photo = $photo;
+
         return $this;
     }
 
@@ -62,6 +69,7 @@ class Like
     public function setCreatedAt(\DateTimeInterface $createdAt): self
     {
         $this->createdAt = $createdAt;
+
         return $this;
     }
 }

@@ -15,6 +15,7 @@ use PHPUnit\Framework\TestCase;
 class ProfileServiceTest extends TestCase
 {
     private EntityManagerInterface&MockObject $em;
+
     private ProfileService $profileService;
 
     protected function setUp(): void

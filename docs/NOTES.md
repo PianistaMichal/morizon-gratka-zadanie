@@ -246,6 +246,31 @@ Wszystkie wyrażenia w stylu `if (!$var)` na zmiennych nullable zastąpiono ści
 
 **Cel:** unikanie niezamierzonego zachowania przy wartościach falsy (`0`, `""`) które nie są `null`; spójność z `declare(strict_types=1)` obecnym we wszystkich plikach.
 
+### Dodanie PHPStan i PHP CS Fixer
+
+Dodano narzędzia do statycznej analizy i formatowania kodu z profesjonalną konfiguracją.
+
+**Nowe pakiety (`require-dev`):**
+- `phpstan/phpstan: ^1.10` — statyczna analiza PHP
+- `phpstan/phpstan-symfony: ^1.3` — rozszerzenie Symfony (wnioskowanie typów z kontenera, routingu itp.)
+- `phpstan/extension-installer: ^1.3` — automatyczna rejestracja rozszerzeń PHPStan
+- `friendsofphp/php-cs-fixer: ^3.40` — automatyczne formatowanie kodu
+
+**Nowe pliki konfiguracyjne:**
+- `symfony-app/phpstan.neon` — analiza na poziomie 8 (maksymalny), ścieżki `src/` i `tests/`, konfiguracja Symfony container XML
+- `symfony-app/.php-cs-fixer.php` — reguły `@PSR12`, `@Symfony`, `@Symfony:risky`, `declare_strict_types`, ordered imports, trailing commas, brak yoda-style
+
+**Nowy skrypt:**
+- `symfony-app/bin/code_quality_checks` — uruchamia PHPStan i PHP CS Fixer (dry-run) sekwencyjnie; kolorowe wyjście; zwraca niezerowy kod wyjścia jeśli którekolwiek narzędzie zgłosi błąd
+
+**Skrypty Composer (dla wygody):**
+- `composer phpstan` — uruchamia PHPStan
+- `composer cs-check` — sprawdza styl bez modyfikacji (`--dry-run --diff`)
+- `composer cs-fix` — naprawia styl automatycznie
+- `composer quality` — uruchamia oba: phpstan + cs-check
+
+**Uwaga:** po `composer update` wewnątrz kontenera cache Symfony (`var/cache/dev/`) musi istnieć, by PHPStan mógł analizować kontener (wymaga wcześniejszego `bin/console cache:warmup --env=dev`).
+
 ### Zadanie 4: Rate-limiting w PhoenixApi (OTP GenServer)
 
 Zaimplementowano rate-limiting na endpoincie `GET /api/photos` z użyciem OTP GenServer (sliding-window algorithm).

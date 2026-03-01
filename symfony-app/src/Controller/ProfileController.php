@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
-use App\Service\PhoenixClientInterface;
 use App\Enum\FlashType;
 use App\Exception\InvalidPhoenixTokenException;
 use App\Service\FlashService;
+use App\Service\PhoenixClientInterface;
 use App\Service\ProfileService;
 use App\Service\SessionService;
 use Symfony\Component\HttpFoundation\RedirectResponse;
@@ -26,7 +26,8 @@ class ProfileController
         private Environment $twig,
         private FlashService $flashService,
         private PhoenixClientInterface $phoenixClient,
-    ) {}
+    ) {
+    }
 
     #[Route('/profile', name: 'profile')]
     public function profile(Request $request): Response
@@ -41,6 +42,7 @@ class ProfileController
 
         if ($user === null) {
             $request->getSession()->clear();
+
             return new RedirectResponse($this->router->generate('home'));
         }
 
@@ -60,6 +62,7 @@ class ProfileController
 
         if ($user === null) {
             $request->getSession()->clear();
+
             return new RedirectResponse($this->router->generate('home'));
         }
 
@@ -83,11 +86,13 @@ class ProfileController
 
         if ($user === null) {
             $request->getSession()->clear();
+
             return new RedirectResponse($this->router->generate('home'));
         }
 
         if ($user->getPhoenixToken() === null) {
             $this->flashService->add(FlashType::ERROR, 'Najpierw zapisz token dostępu do PhoenixApi.');
+
             return new RedirectResponse($this->router->generate('profile'));
         }
 

@@ -17,8 +17,11 @@ use PHPUnit\Framework\TestCase;
 class HomeServiceTest extends TestCase
 {
     private PhotoRepository&MockObject $photoRepository;
+
     private LikeRepository&MockObject $likeRepository;
+
     private EntityManagerInterface&MockObject $em;
+
     private HomeService $homeService;
 
     protected function setUp(): void

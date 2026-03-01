@@ -38,6 +38,7 @@ class User
     #[ORM\Column(type: 'string', length: 255, nullable: true)]
     private ?string $phoenixToken = null;
 
+    /** @var Collection<int, Photo> */
     #[ORM\OneToMany(mappedBy: 'user', targetEntity: Photo::class, cascade: ['persist', 'remove'])]
     private Collection $photos;
 
@@ -59,6 +60,7 @@ class User
     public function setUsername(string $username): self
     {
         $this->username = $username;
+
         return $this;
     }
 
@@ -70,6 +72,7 @@ class User
     public function setEmail(string $email): self
     {
         $this->email = $email;
+
         return $this;
     }
 
@@ -81,6 +84,7 @@ class User
     public function setName(?string $name): self
     {
         $this->name = $name;
+
         return $this;
     }
 
@@ -92,6 +96,7 @@ class User
     public function setLastName(?string $lastName): self
     {
         $this->lastName = $lastName;
+
         return $this;
     }
 
@@ -103,6 +108,7 @@ class User
     public function setAge(?int $age): self
     {
         $this->age = $age;
+
         return $this;
     }
 
@@ -114,6 +120,7 @@ class User
     public function setBio(?string $bio): self
     {
         $this->bio = $bio;
+
         return $this;
     }
 
@@ -125,6 +132,7 @@ class User
     public function setPhoenixToken(?string $phoenixToken): self
     {
         $this->phoenixToken = $phoenixToken;
+
         return $this;
     }
 
@@ -148,11 +156,7 @@ class User
 
     public function removePhoto(Photo $photo): self
     {
-        if ($this->photos->removeElement($photo)) {
-            if ($photo->getUser() === $this) {
-                $photo->setUser(null);
-            }
-        }
+        $this->photos->removeElement($photo);
 
         return $this;
     }

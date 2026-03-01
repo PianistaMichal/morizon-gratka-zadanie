@@ -26,7 +26,7 @@ class PhotoControllerTest extends AbstractWebTestCase
         $this->client->request('GET', "/photo/{$photo->getId()}/like");
         $this->client->followRedirect();
 
-        $this->assertStringContainsString('You must be logged in', $this->client->getResponse()->getContent());
+        $this->assertStringContainsString('You must be logged in', $this->getResponseContent());
     }
 
     public function testLikePhotoWhenLoggedInRedirectsToHome(): void
@@ -47,7 +47,7 @@ class PhotoControllerTest extends AbstractWebTestCase
         $this->client->request('GET', "/photo/{$photo->getId()}/like");
         $this->client->followRedirect();
 
-        $this->assertStringContainsString('Photo liked!', $this->client->getResponse()->getContent());
+        $this->assertStringContainsString('Photo liked!', $this->getResponseContent());
     }
 
     public function testUnlikePhotoShowsInfoFlash(): void
@@ -62,7 +62,7 @@ class PhotoControllerTest extends AbstractWebTestCase
         $this->client->request('GET', "/photo/{$photoId}/like");
         $this->client->followRedirect();
 
-        $this->assertStringContainsString('Photo unliked!', $this->client->getResponse()->getContent());
+        $this->assertStringContainsString('Photo unliked!', $this->getResponseContent());
     }
 
     public function testLikeIncreasesCounter(): void
@@ -78,6 +78,7 @@ class PhotoControllerTest extends AbstractWebTestCase
         $em = static::getContainer()->get(EntityManagerInterface::class);
         $em->clear();
         $updatedPhoto = $em->getRepository(Photo::class)->find($photoId);
+        $this->assertNotNull($updatedPhoto);
 
         $this->assertSame($initialCount + 1, $updatedPhoto->getLikeCounter());
     }
@@ -97,6 +98,7 @@ class PhotoControllerTest extends AbstractWebTestCase
         $em = static::getContainer()->get(EntityManagerInterface::class);
         $em->clear();
         $updatedPhoto = $em->getRepository(Photo::class)->find($photoId);
+        $this->assertNotNull($updatedPhoto);
 
         $this->assertSame(0, $updatedPhoto->getLikeCounter());
     }
@@ -116,6 +118,7 @@ class PhotoControllerTest extends AbstractWebTestCase
         $em = static::getContainer()->get(EntityManagerInterface::class);
         $em->clear();
         $updatedPhoto = $em->getRepository(Photo::class)->find($photoId);
+        $this->assertNotNull($updatedPhoto);
 
         $this->assertSame(2, $updatedPhoto->getLikeCounter());
     }

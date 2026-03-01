@@ -43,3 +43,26 @@ docker-compose exec symfony bin/test
 ```bash
 docker-compose exec -e MIX_ENV=test phoenix mix test
 ```
+
+## Code Quality (Symfony)
+
+### Uruchomienie wszystkich sprawdzeń jednym poleceniem
+
+```bash
+docker-compose exec symfony bin/code_quality_checks
+```
+
+Skrypt uruchamia kolejno PHPStan i PHP CS Fixer (tryb dry-run) i zwraca kod wyjścia `1` jeśli którekolwiek narzędzie zgłosi błąd.
+
+### Osobne narzędzia
+
+```bash
+# Statyczna analiza (poziom 8)
+docker-compose exec symfony composer phpstan
+
+# Sprawdzenie stylu kodu (bez modyfikacji)
+docker-compose exec symfony composer cs-check
+
+# Automatyczna naprawa stylu
+docker-compose exec symfony composer cs-fix
+```

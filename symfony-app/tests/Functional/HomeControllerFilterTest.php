@@ -14,7 +14,7 @@ class HomeControllerFilterTest extends AbstractWebTestCase
     {
         $this->client->request('GET', '/');
 
-        $content = $this->client->getResponse()->getContent();
+        $content = $this->getResponseContent();
 
         $this->assertStringContainsString('name="location"', $content);
         $this->assertStringContainsString('name="camera"', $content);
@@ -30,7 +30,7 @@ class HomeControllerFilterTest extends AbstractWebTestCase
         $this->client->request('GET', '/', ['location' => 'Swiss']);
 
         $this->assertResponseIsSuccessful();
-        $content = $this->client->getResponse()->getContent();
+        $content = $this->getResponseContent();
 
         $this->assertStringContainsString('Swiss Alps', $content);
         $this->assertStringNotContainsString('Olympic National Park', $content);
@@ -41,7 +41,7 @@ class HomeControllerFilterTest extends AbstractWebTestCase
         $this->client->request('GET', '/', ['location' => 'nonexistent_xyz_location']);
 
         $this->assertResponseIsSuccessful();
-        $this->assertStringContainsString('No photos yet', $this->client->getResponse()->getContent());
+        $this->assertStringContainsString('No photos yet', $this->getResponseContent());
     }
 
     // --- filter by camera ---
@@ -51,7 +51,7 @@ class HomeControllerFilterTest extends AbstractWebTestCase
         $this->client->request('GET', '/', ['camera' => 'Canon EOS R5']);
 
         $this->assertResponseIsSuccessful();
-        $content = $this->client->getResponse()->getContent();
+        $content = $this->getResponseContent();
 
         // Canon EOS R5 photo is at Olympic National Park
         $this->assertStringContainsString('Olympic National Park', $content);
@@ -64,7 +64,7 @@ class HomeControllerFilterTest extends AbstractWebTestCase
         $this->client->request('GET', '/', ['camera' => 'Nikon']);
 
         $this->assertResponseIsSuccessful();
-        $content = $this->client->getResponse()->getContent();
+        $content = $this->getResponseContent();
 
         // Nikon D850 (Yellowstone), Nikon Z7 II (Scottish Highlands), Nikon D6 (Alaska)
         $this->assertStringContainsString('Yellowstone', $content);
@@ -81,7 +81,7 @@ class HomeControllerFilterTest extends AbstractWebTestCase
         $this->client->request('GET', '/', ['description' => 'salmon']);
 
         $this->assertResponseIsSuccessful();
-        $content = $this->client->getResponse()->getContent();
+        $content = $this->getResponseContent();
 
         // "salmon" appears only in the Alaska bear photo
         $this->assertStringContainsString('Alaska', $content);
@@ -93,7 +93,7 @@ class HomeControllerFilterTest extends AbstractWebTestCase
         $this->client->request('GET', '/', ['description' => 'FOREST']);
 
         $this->assertResponseIsSuccessful();
-        $content = $this->client->getResponse()->getContent();
+        $content = $this->getResponseContent();
 
         // "forest" appears in Olympic National Park description ("ancient forest")
         $this->assertStringContainsString('Olympic National Park', $content);
@@ -107,7 +107,7 @@ class HomeControllerFilterTest extends AbstractWebTestCase
         $this->client->request('GET', '/', ['taken_at' => '2024-03-15']);
 
         $this->assertResponseIsSuccessful();
-        $content = $this->client->getResponse()->getContent();
+        $content = $this->getResponseContent();
 
         $this->assertStringContainsString('Olympic National Park', $content);
         $this->assertStringNotContainsString('Swiss Alps', $content);
@@ -118,7 +118,7 @@ class HomeControllerFilterTest extends AbstractWebTestCase
         $this->client->request('GET', '/', ['taken_at' => '2000-01-01']);
 
         $this->assertResponseIsSuccessful();
-        $this->assertStringContainsString('No photos yet', $this->client->getResponse()->getContent());
+        $this->assertStringContainsString('No photos yet', $this->getResponseContent());
     }
 
     public function testFilterByTakenAtWithInvalidDateIsIgnored(): void
@@ -127,7 +127,7 @@ class HomeControllerFilterTest extends AbstractWebTestCase
         $this->client->request('GET', '/', ['taken_at' => 'not-a-date']);
 
         $this->assertResponseIsSuccessful();
-        $content = $this->client->getResponse()->getContent();
+        $content = $this->getResponseContent();
 
         $this->assertStringContainsString('Olympic National Park', $content);
         $this->assertStringContainsString('Swiss Alps', $content);
@@ -141,7 +141,7 @@ class HomeControllerFilterTest extends AbstractWebTestCase
         $this->client->request('GET', '/', ['username' => 'nature_lover']);
 
         $this->assertResponseIsSuccessful();
-        $content = $this->client->getResponse()->getContent();
+        $content = $this->getResponseContent();
 
         $this->assertStringContainsString('Yellowstone', $content);
         $this->assertStringContainsString('Alaska', $content);
@@ -156,7 +156,7 @@ class HomeControllerFilterTest extends AbstractWebTestCase
 
         $this->assertResponseIsSuccessful();
         // landscape_dreams (userIndex 3) has: Amazon, Scottish Highlands
-        $content = $this->client->getResponse()->getContent();
+        $content = $this->getResponseContent();
 
         $this->assertStringContainsString('Amazon', $content);
         $this->assertStringContainsString('Scottish Highlands', $content);
@@ -170,7 +170,7 @@ class HomeControllerFilterTest extends AbstractWebTestCase
         $this->client->request('GET', '/', ['camera' => 'Canon', 'username' => 'wildlife_pro']);
 
         $this->assertResponseIsSuccessful();
-        $content = $this->client->getResponse()->getContent();
+        $content = $this->getResponseContent();
 
         $this->assertStringContainsString('Iceland', $content);
         // Swiss Alps is wildlife_pro but Sony — should not appear
@@ -185,7 +185,7 @@ class HomeControllerFilterTest extends AbstractWebTestCase
     {
         $this->client->request('GET', '/', ['location' => 'Iceland']);
 
-        $content = $this->client->getResponse()->getContent();
+        $content = $this->getResponseContent();
 
         $this->assertStringContainsString('value="Iceland"', $content);
     }
@@ -197,7 +197,7 @@ class HomeControllerFilterTest extends AbstractWebTestCase
         $this->client->request('GET', '/', ['location' => '', 'camera' => '']);
 
         $this->assertResponseIsSuccessful();
-        $content = $this->client->getResponse()->getContent();
+        $content = $this->getResponseContent();
 
         $this->assertStringContainsString('Olympic National Park', $content);
         $this->assertStringContainsString('Swiss Alps', $content);

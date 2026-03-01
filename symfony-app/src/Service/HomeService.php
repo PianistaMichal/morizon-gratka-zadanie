@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Service;
 
+use App\Entity\Photo;
 use App\Entity\User;
 use App\Repository\LikeRepository;
 use App\Repository\PhotoRepository;
@@ -15,8 +16,14 @@ class HomeService
         private PhotoRepository $photoRepository,
         private LikeRepository $likeRepository,
         private EntityManagerInterface $em,
-    ) {}
+    ) {
+    }
 
+    /**
+     * @param array<string, string> $filters
+     *
+     * @return array{photos: Photo[], currentUser: User|null, userLikes: array<int, bool>}
+     */
     public function getPhotosData(?int $userId, array $filters = []): array
     {
         $photos = $this->photoRepository->findAllWithUsersFiltered($filters);
@@ -29,7 +36,7 @@ class HomeService
             if ($currentUser) {
                 $this->likeRepository->setUser($currentUser);
                 foreach ($photos as $photo) {
-                    $userLikes[$photo->getId()] = $this->likeRepository->hasUserLikedPhoto($photo);
+                    $userLikes[(int) $photo->getId()] = $this->likeRepository->hasUserLikedPhoto($photo);
                 }
             }
         }

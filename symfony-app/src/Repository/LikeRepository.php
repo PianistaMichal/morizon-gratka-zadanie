@@ -10,9 +10,12 @@ use App\Entity\User;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
+/**
+ * @extends ServiceEntityRepository<Like>
+ */
 class LikeRepository extends ServiceEntityRepository implements LikeRepositoryInterface
 {
-    private ?User $user;
+    private ?User $user = null;
 
     public function __construct(ManagerRegistry $registry)
     {
@@ -63,12 +66,16 @@ class LikeRepository extends ServiceEntityRepository implements LikeRepositoryIn
             ->getQuery()
             ->getArrayResult();
 
-        return count($likes) > 0;
+        return \count($likes) > 0;
     }
 
     #[\Override]
     public function createLike(Photo $photo): Like
     {
+        if ($this->user === null) {
+            throw new \LogicException('User must be set via setUser() before calling createLike().');
+        }
+
         $like = new Like();
         $like->setUser($this->user);
         $like->setPhoto($photo);

@@ -12,7 +12,8 @@ class FlashService
 {
     public function __construct(
         private RequestStack $requestStack,
-    ) {}
+    ) {
+    }
 
     public function add(FlashType $type, string $message): void
     {

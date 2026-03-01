@@ -43,6 +43,7 @@ class AuthToken
     public function setToken(string $token): self
     {
         $this->token = $token;
+
         return $this;
     }
 
@@ -54,6 +55,7 @@ class AuthToken
     public function setUser(User $user): self
     {
         $this->user = $user;
+
         return $this;
     }
 
@@ -65,6 +67,7 @@ class AuthToken
     public function setCreatedAt(\DateTimeInterface $createdAt): self
     {
         $this->createdAt = $createdAt;
+
         return $this;
     }
 }

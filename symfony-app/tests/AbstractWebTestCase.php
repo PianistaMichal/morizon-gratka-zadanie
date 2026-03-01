@@ -50,6 +50,17 @@ abstract class AbstractWebTestCase extends WebTestCase
     }
 
     /**
+     * Zwraca treść odpowiedzi HTTP jako string (Response::getContent() zwraca string|false).
+     */
+    protected function getResponseContent(): string
+    {
+        $content = $this->client->getResponse()->getContent();
+        self::assertNotFalse($content, 'Response content must not be false.');
+
+        return $content;
+    }
+
+    /**
      * Zwraca pierwsze zdjęcie z bazy — używane w testach zamiast zakładania konkretnego ID.
      */
     protected function getFirstPhoto(): Photo

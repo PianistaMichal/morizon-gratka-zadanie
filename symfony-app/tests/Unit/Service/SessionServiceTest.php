@@ -13,7 +13,9 @@ use Symfony\Component\HttpFoundation\Session\SessionInterface;
 class SessionServiceTest extends TestCase
 {
     private RequestStack&MockObject $requestStack;
+
     private SessionInterface&MockObject $session;
+
     private SessionService $sessionService;
 
     protected function setUp(): void
@@ -43,7 +45,7 @@ class SessionServiceTest extends TestCase
     {
         $setCalls = [];
         $this->session->method('set')
-            ->willReturnCallback(function (string $key, mixed $value) use (&$setCalls): void {
+            ->willReturnCallback(static function (string $key, mixed $value) use (&$setCalls): void {
                 $setCalls[$key] = $value;
             });
 

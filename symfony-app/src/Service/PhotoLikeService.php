@@ -8,7 +8,6 @@ use App\Entity\Photo;
 use App\Entity\User;
 use App\Enum\LikeAction;
 use App\Repository\LikeRepository;
-use App\Service\LikeService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
@@ -18,7 +17,8 @@ class PhotoLikeService
         private LikeRepository $likeRepository,
         private LikeService $likeService,
         private EntityManagerInterface $em,
-    ) {}
+    ) {
+    }
 
     public function toggle(int $userId, int $photoId): LikeAction
     {
@@ -33,10 +33,12 @@ class PhotoLikeService
 
         if ($this->likeRepository->hasUserLikedPhoto($photo)) {
             $this->likeRepository->unlikePhoto($photo);
+
             return LikeAction::UNLIKED;
         }
 
         $this->likeService->execute($photo);
+
         return LikeAction::LIKED;
     }
 }

@@ -1,0 +1,119 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
+
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+CYAN='\033[0;36m'
+BOLD='\033[1m'
+RESET='\033[0m'
+
+PHPSTAN="$PROJECT_DIR/vendor/bin/phpstan"
+CS_FIXER="$PROJECT_DIR/vendor/bin/php-cs-fixer"
+
+EXIT_CODE=0
+ERRORS=()
+
+print_header() {
+    echo -e "\n${BOLD}${CYAN}══════════════════════════════════════════${RESET}"
+    echo -e "${BOLD}${CYAN}  $1${RESET}"
+    echo -e "${BOLD}${CYAN}══════════════════════════════════════════${RESET}\n"
+}
+
+print_step() {
+    echo -e "${BOLD}▶ $1${RESET}"
+}
+
+print_success() {
+    echo -e "${GREEN}✔ $1${RESET}"
+}
+
+print_error() {
+    echo -e "${RED}✘ $1${RESET}"
+}
+
+print_warning() {
+    echo -e "${YELLOW}⚠ $1${RESET}"
+}
+
+check_dependencies() {
+    print_header "Checking dependencies"
+
+    if [[ ! -f "$PHPSTAN" ]]; then
+        print_error "PHPStan not found. Run: composer install"
+        exit 1
+    fi
+    print_success "PHPStan found"
+
+    if [[ ! -f "$CS_FIXER" ]]; then
+        print_error "PHP CS Fixer not found. Run: composer install"
+        exit 1
+    fi
+    print_success "PHP CS Fixer found"
+}
+
+run_phpstan() {
+    print_header "PHPStan — Static Analysis"
+    print_step "Running PHPStan (level 8)..."
+    echo ""
+
+    if "$PHPSTAN" analyse --memory-limit=256M --no-progress; then
+        echo ""
+        print_success "PHPStan passed — no errors found"
+    else
+        echo ""
+        print_error "PHPStan failed"
+        ERRORS+=("PHPStan")
+        EXIT_CODE=1
+    fi
+}
+
+run_cs_fixer() {
+    print_header "PHP CS Fixer — Code Style"
+    print_step "Checking code style (dry-run)..."
+    echo ""
+
+    if "$CS_FIXER" fix --dry-run --diff --no-interaction; then
+        echo ""
+        print_success "PHP CS Fixer passed — code style is correct"
+    else
+        echo ""
+        print_error "PHP CS Fixer failed — run 'composer cs-fix' or 'vendor/bin/php-cs-fixer fix' to auto-fix"
+        ERRORS+=("PHP CS Fixer")
+        EXIT_CODE=1
+    fi
+}
+
+print_summary() {
+    print_header "Summary"
+
+    if [[ ${#ERRORS[@]} -eq 0 ]]; then
+        print_success "All quality checks passed!"
+    else
+        print_error "The following checks failed:"
+        for err in "${ERRORS[@]}"; do
+            echo -e "  ${RED}• $err${RESET}"
+        done
+        echo ""
+        print_warning "Fix the issues above and re-run: bin/code_quality_checks"
+    fi
+    echo ""
+}
+
+# ── Main ──────────────────────────────────────────────────────────────────────
+
+cd "$PROJECT_DIR"
+
+echo -e "\n${BOLD}Code Quality Checks${RESET}"
+echo -e "Project: ${CYAN}$PROJECT_DIR${RESET}"
+
+check_dependencies
+run_phpstan
+run_cs_fixer
+print_summary
+
+exit $EXIT_CODE

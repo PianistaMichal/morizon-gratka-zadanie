@@ -22,7 +22,8 @@ class AuthController
         private RouterInterface $router,
         private FlashService $flashService,
         private SessionService $sessionService,
-    ) {}
+    ) {
+    }
 
     #[Route('/auth/{username}/{token}', name: 'auth_login')]
     public function login(string $username, string $token): Response

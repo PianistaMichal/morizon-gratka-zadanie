@@ -20,7 +20,7 @@ class HomeControllerTest extends AbstractWebTestCase
     {
         $this->client->request('GET', '/');
 
-        $content = $this->client->getResponse()->getContent();
+        $content = $this->getResponseContent();
 
         // Zdjęcia z fixtures zawierają te lokalizacje
         $this->assertStringContainsString('Olympic National Park', $content);

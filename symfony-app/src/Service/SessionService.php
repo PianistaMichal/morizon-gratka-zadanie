@@ -9,11 +9,13 @@ use Symfony\Component\HttpFoundation\RequestStack;
 class SessionService
 {
     private const USER_ID = 'user_id';
+
     private const USERNAME = 'username';
 
     public function __construct(
         private RequestStack $requestStack,
-    ) {}
+    ) {
+    }
 
     public function getUserId(): ?int
     {

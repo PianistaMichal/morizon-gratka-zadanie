@@ -1,0 +1,26 @@
+parameters:
+    level: 8
+    paths:
+        - src
+        - tests
+
+    symfony:
+        container_xml_path: var/cache/dev/App_KernelDevDebugContainer.xml
+        consoleApplicationLoader: tests/console-application.php
+
+    # Report unmatched ignored errors as warnings, not failures
+    reportUnmatchedIgnoredErrors: false
+
+    # Treat phpDoc types as definitive
+    checkMissingIterableValueType: true
+    checkGenericClassInNonGenericObjectType: true
+
+    # Strict checks
+    checkPhpDocMissingReturn: true
+    checkTooWideReturnTypesInProtectedAndPublicMethods: true
+    # Doctrine entities are initialized by ORM hydration, not constructors — disable this check
+    checkUninitializedProperties: false
+
+    ignoreErrors:
+        # Ignore errors in generated/vendor code
+        - '#Call to an undefined method Doctrine\\ORM\\QueryBuilder::#'

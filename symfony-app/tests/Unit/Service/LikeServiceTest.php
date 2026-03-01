@@ -13,6 +13,7 @@ use PHPUnit\Framework\TestCase;
 class LikeServiceTest extends TestCase
 {
     private LikeRepositoryInterface&MockObject $likeRepository;
+
     private LikeService $likeService;
 
     protected function setUp(): void

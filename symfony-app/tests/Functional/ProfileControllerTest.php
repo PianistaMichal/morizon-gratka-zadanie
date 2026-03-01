@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace App\Tests\Functional;
 
-use App\Service\PhoenixClientInterface;
 use App\Exception\InvalidPhoenixTokenException;
 use App\Service\PhoenixClient;
+use App\Service\PhoenixClientInterface;
 use App\Tests\AbstractWebTestCase;
 use PHPUnit\Framework\MockObject\MockObject;
 
@@ -46,7 +46,7 @@ class ProfileControllerTest extends AbstractWebTestCase
         $this->loginAs('demo');
 
         $this->client->request('GET', '/profile');
-        $content = $this->client->getResponse()->getContent();
+        $content = $this->getResponseContent();
 
         // Fixture: demo user ma name="Demo", lastName="User", email="demo@example.com"
         $this->assertStringContainsString('Demo', $content);
@@ -87,7 +87,7 @@ class ProfileControllerTest extends AbstractWebTestCase
 
         $this->client->request('POST', '/profile/token', ['phoenix_token' => 'test_token_user1_abc123']);
         $this->client->followRedirect();
-        $content = $this->client->getResponse()->getContent();
+        $content = $this->getResponseContent();
 
         $this->assertStringContainsString('Token dostępu został zapisany', $content);
     }
@@ -105,7 +105,7 @@ class ProfileControllerTest extends AbstractWebTestCase
 
         $this->client->request('POST', '/profile/import');
         $this->client->followRedirect();
-        $content = $this->client->getResponse()->getContent();
+        $content = $this->getResponseContent();
 
         $this->assertStringContainsString('Najpierw zapisz token', $content);
     }
@@ -122,7 +122,7 @@ class ProfileControllerTest extends AbstractWebTestCase
 
         $this->client->request('POST', '/profile/import');
         $this->client->followRedirect();
-        $content = $this->client->getResponse()->getContent();
+        $content = $this->getResponseContent();
 
         $this->assertStringContainsString('Nieprawidłowy token', $content);
     }
@@ -142,7 +142,7 @@ class ProfileControllerTest extends AbstractWebTestCase
 
         $this->client->request('POST', '/profile/import');
         $this->client->followRedirect();
-        $content = $this->client->getResponse()->getContent();
+        $content = $this->getResponseContent();
 
         $this->assertStringContainsString('Zaimportowano 2 zdjęć', $content);
     }

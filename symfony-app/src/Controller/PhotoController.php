@@ -21,7 +21,8 @@ class PhotoController
         private RouterInterface $router,
         private FlashService $flashService,
         private SessionService $sessionService,
-    ) {}
+    ) {
+    }
 
     #[Route('/photo/{id}/like', name: 'photo_like')]
     public function like(int $id): Response
@@ -30,6 +31,7 @@ class PhotoController
 
         if ($userId === null) {
             $this->flashService->add(FlashType::ERROR, 'You must be logged in to like photos.');
+
             return new RedirectResponse($this->router->generate('home'));
         }
 

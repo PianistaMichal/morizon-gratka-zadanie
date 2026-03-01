@@ -15,7 +15,8 @@ class AuthService
     public function __construct(
         private EntityManagerInterface $em,
         private SessionService $sessionService,
-    ) {}
+    ) {
+    }
 
     /**
      * @throws InvalidTokenException
@@ -33,6 +34,8 @@ class AuthService
             throw new UserNotFoundException($username);
         }
 
-        $this->sessionService->login($user->getId(), $username);
+        $userId = $user->getId();
+        \assert($userId !== null, 'User fetched from DB must have an ID.');
+        $this->sessionService->login($userId, $username);
     }
 }

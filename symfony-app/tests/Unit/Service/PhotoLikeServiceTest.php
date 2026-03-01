@@ -19,8 +19,11 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 class PhotoLikeServiceTest extends TestCase
 {
     private LikeRepository&MockObject $likeRepository;
+
     private LikeService&MockObject $likeService;
+
     private EntityManagerInterface&MockObject $em;
+
     private PhotoLikeService $photoLikeService;
 
     protected function setUp(): void
