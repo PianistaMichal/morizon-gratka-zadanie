@@ -25,7 +25,7 @@ class PhotoLikeService
         $user = $this->em->getRepository(User::class)->find($userId);
         $photo = $this->em->getRepository(Photo::class)->find($photoId);
 
-        if (!$photo) {
+        if ($photo === null) {
             throw new NotFoundHttpException('Photo not found');
         }
 

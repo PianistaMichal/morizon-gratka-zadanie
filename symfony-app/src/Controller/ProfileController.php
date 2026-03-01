@@ -33,13 +33,13 @@ class ProfileController
     {
         $userId = $this->sessionService->getUserId();
 
-        if (!$userId) {
+        if ($userId === null) {
             return new RedirectResponse($this->router->generate('home'));
         }
 
         $user = $this->profileService->findUser($userId);
 
-        if (!$user) {
+        if ($user === null) {
             $request->getSession()->clear();
             return new RedirectResponse($this->router->generate('home'));
         }
@@ -52,13 +52,13 @@ class ProfileController
     {
         $userId = $this->sessionService->getUserId();
 
-        if (!$userId) {
+        if ($userId === null) {
             return new RedirectResponse($this->router->generate('home'));
         }
 
         $user = $this->profileService->findUser($userId);
 
-        if (!$user) {
+        if ($user === null) {
             $request->getSession()->clear();
             return new RedirectResponse($this->router->generate('home'));
         }
@@ -75,18 +75,18 @@ class ProfileController
     {
         $userId = $this->sessionService->getUserId();
 
-        if (!$userId) {
+        if ($userId === null) {
             return new RedirectResponse($this->router->generate('home'));
         }
 
         $user = $this->profileService->findUser($userId);
 
-        if (!$user) {
+        if ($user === null) {
             $request->getSession()->clear();
             return new RedirectResponse($this->router->generate('home'));
         }
 
-        if (!$user->getPhoenixToken()) {
+        if ($user->getPhoenixToken() === null) {
             $this->flashService->add(FlashType::ERROR, 'Najpierw zapisz token dostępu do PhoenixApi.');
             return new RedirectResponse($this->router->generate('profile'));
         }

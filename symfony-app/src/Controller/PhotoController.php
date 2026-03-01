@@ -28,7 +28,7 @@ class PhotoController
     {
         $userId = $this->sessionService->getUserId();
 
-        if (!$userId) {
+        if ($userId === null) {
             $this->flashService->add(FlashType::ERROR, 'You must be logged in to like photos.');
             return new RedirectResponse($this->router->generate('home'));
         }

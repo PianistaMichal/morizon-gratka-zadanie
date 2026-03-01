@@ -235,6 +235,17 @@ Dodano testy jednostkowe (PHPUnit `TestCase`, bez bazy danych) pokrywające wszy
 php bin/phpunit tests/Unit
 ```
 
+### Refaktor: zastąpienie luźnych porównań (`!$var`) ścisłymi (`=== null`)
+
+Wszystkie wyrażenia w stylu `if (!$var)` na zmiennych nullable zastąpiono ścisłymi porównaniami z `null`.
+
+**Zmienione pliki:**
+- `src/Controller/ProfileController.php` — 5 zmian: `!$userId` → `$userId === null`, `!$user` → `$user === null` (3×), `!$user->getPhoenixToken()` → `$user->getPhoenixToken() === null`
+- `src/Controller/PhotoController.php` — 1 zmiana: `!$userId` → `$userId === null`
+- `src/Service/PhotoLikeService.php` — 1 zmiana: `!$photo` → `$photo === null`
+
+**Cel:** unikanie niezamierzonego zachowania przy wartościach falsy (`0`, `""`) które nie są `null`; spójność z `declare(strict_types=1)` obecnym we wszystkich plikach.
+
 ### Zadanie 4: Rate-limiting w PhoenixApi (OTP GenServer)
 
 Zaimplementowano rate-limiting na endpoincie `GET /api/photos` z użyciem OTP GenServer (sliding-window algorithm).
