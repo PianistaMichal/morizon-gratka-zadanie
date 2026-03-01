@@ -138,6 +138,28 @@ php bin/phpunit
 - Fixtures ładowane są w `setUp()` każdego testu → pełna izolacja stanu DB
 - IDs zdjęć nie są hardcodowane — testy pytają bazę o `findOneBy([], ['id' => 'ASC'])`
 
+### Zadanie 2: Import zdjęć z PhoenixApi
+
+Dodano możliwość ręcznego wpisania tokenu dostępu do PhoenixApi w profilu użytkownika oraz importowania zdjęć z PhoenixApi do SymfonyApp.
+
+**Nowe pliki:**
+- `src/Domain/Port/PhoenixClientInterface.php` — interfejs port (Hexagonal Architecture): metoda `getPhotos(string $token): array`
+- `src/Infrastructure/Http/PhoenixClient.php` — implementacja HTTP: wysyła żądanie `GET /api/photos` z nagłówkiem `access-token`, rzuca `InvalidPhoenixTokenException` przy 401
+- `src/Exception/InvalidPhoenixTokenException.php` — wyjątek rzucany przy błędnym tokenie PhoenixApi
+- `migrations/Version20260301000000.php` — migracja: dodanie kolumny `phoenix_token VARCHAR(255) NULL` do tabeli `users`
+
+**Zmienione pliki:**
+- `src/Entity/User.php` — pole `phoenixToken` (nullable string) z getterem/setterem
+- `src/Service/ProfileService.php` — metody `savePhoenixToken(User, string)` i `importPhotos(User, PhoenixClientInterface): int`
+- `src/Controller/ProfileController.php` — dwie nowe trasy POST: `/profile/token` (zapis tokenu) i `/profile/import` (import zdjęć); wstrzyknięto `FlashService` i `PhoenixClientInterface`
+- `templates/profile/index.html.twig` — sekcja "PhoenixApi — Import zdjęć": formularz do wpisania tokenu (z aktualną wartością), przycisk importu, status tokenu
+- `config/services.yaml` — parametr `phoenix_base_url` z env `PHOENIX_BASE_URL`; binding `PhoenixClientInterface → PhoenixClient`
+- `tests/Controller/ProfileControllerTest.php` — 7 nowych testów: zapis tokenu, redirect bez sesji, import z brakiem tokenu, błędny token, poprawny token; mock `PhoenixClientInterface` jako `synthetic` service
+
+**Architektura:**
+- `PhoenixClient` jest `synthetic: true` w `services_test.yaml` — testy ustawiają mock via `static::getContainer()->set(PhoenixClient::class, $mock)` przed żądaniem
+- URL PhoenixApi konfigurowany przez zmienną środowiskową `PHOENIX_BASE_URL` (w docker-compose: `http://phoenix:4000`)
+
 ## Sposób i stopień wykorzystania AI
 
 Do znalezienia i naprawy błędu użyłem Claude Code (claude-sonnet-4-6). AI przejrzało Dockerfiles obu serwisów, wykryło brakującą linię przez porównanie z działającym odpowiednikiem Phoenix, zaproponowało i zastosowało poprawkę, a następnie zweryfikowało ją przez pełne uruchomienie `docker-compose up -d` i przetestowanie wszystkich komend z sekcji "Szybki start" w README.
