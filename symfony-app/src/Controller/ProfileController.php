@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
-use App\Domain\Port\PhoenixClientInterface;
+use App\Service\PhoenixClientInterface;
 use App\Enum\FlashType;
 use App\Exception\InvalidPhoenixTokenException;
 use App\Service\FlashService;

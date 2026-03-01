@@ -7,8 +7,8 @@ namespace App\Service;
 use App\Entity\Photo;
 use App\Entity\User;
 use App\Enum\LikeAction;
-use App\Likes\LikeRepository;
-use App\Likes\LikeService;
+use App\Repository\LikeRepository;
+use App\Service\LikeService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 

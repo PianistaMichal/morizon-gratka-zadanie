@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace App\Likes;
+namespace App\Service;
 
 use App\Entity\Photo;
-use App\Entity\User;
+use App\Repository\LikeRepositoryInterface;
 
 class LikeService
 {

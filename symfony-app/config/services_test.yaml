@@ -1,14 +1,14 @@
 services:
-    App\Infrastructure\Http\PhoenixClient:
+    App\Service\PhoenixClient:
         synthetic: true
         public: true
 
-    App\Domain\Port\PhoenixClientInterface: '@App\Infrastructure\Http\PhoenixClient'
+    App\Service\PhoenixClientInterface: '@App\Service\PhoenixClient'
 
-    test.App\Infrastructure\Http\PhoenixClient:
-        alias: App\Infrastructure\Http\PhoenixClient
+    test.App\Service\PhoenixClient:
+        alias: App\Service\PhoenixClient
         public: true
 
-    test.App\Domain\Port\PhoenixClientInterface:
-        alias: App\Domain\Port\PhoenixClientInterface
+    test.App\Service\PhoenixClientInterface:
+        alias: App\Service\PhoenixClientInterface
         public: true

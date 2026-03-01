@@ -30,9 +30,9 @@ class AuthController
         try {
             $this->authService->login($username, $token);
         } catch (InvalidTokenException) {
-            return new Response('Invalid token', 401);
+            return new Response('Invalid token', Response::HTTP_UNAUTHORIZED);
         } catch (UserNotFoundException) {
-            return new Response('User not found', 404);
+            return new Response('User not found', Response::HTTP_NOT_FOUND);
         }
 
         $this->flashService->add(FlashType::SUCCESS, "Welcome back, {$username}!");

@@ -178,6 +178,43 @@ Dodano możliwość filtrowania zdjęć na stronie głównej po polach: `locatio
 **Testy:**
 - `tests/Controller/HomeControllerFilterTest.php` — 14 testów: obecność formularza, filtr po każdym polu, filtr łączony (camera + username), pusty filtr = brak efektu, zły format daty ignorowany, zachowanie wartości w formularzu po filtrowaniu
 
+### Refaktor: użycie stałych `Response::HTTP_*` zamiast magic numbers w kontrolerach
+
+W `AuthController` zastąpiono literały `401` i `404` stałymi Symfony:
+- `401` → `Response::HTTP_UNAUTHORIZED`
+- `404` → `Response::HTTP_NOT_FOUND`
+
+**Cel:** czytelność i unikanie magic numbers.
+
+### Refaktor: rozproszenie katalogu Likes/ do standardowych warstw
+
+Katalog `src/Likes/` mieszał entity, repozytorium, interfejs i serwis w jednym miejscu, co było niespójne z resztą projektu.
+
+**Zmiany:**
+- `src/Likes/Like.php` → `src/Entity/Like.php` (namespace `App\Entity`)
+- `src/Likes/LikeRepository.php` → `src/Repository/LikeRepository.php` (namespace `App\Repository`)
+- `src/Likes/LikeRepositoryInterface.php` → `src/Repository/LikeRepositoryInterface.php` (namespace `App\Repository`)
+- `src/Likes/LikeService.php` → `src/Service/LikeService.php` (namespace `App\Service`)
+- Usunięto katalog `src/Likes/`
+- Zaktualizowano `use` w `HomeService` i `PhotoLikeService`
+- Zaktualizowano alias `LikeRepositoryInterface` w `config/services.yaml`
+- Usunięto osobny mapping `Likes` z `config/packages/doctrine.yaml` — `Like` objęty istniejącym mappingiem `App\Entity`
+
+**Cel:** spójność — każda warstwa w swoim katalogu (`Entity/`, `Repository/`, `Service/`).
+
+### Refaktor: usunięcie DDD-owej struktury Domain/Port i Infrastructure/Http
+
+`PhoenixClientInterface` i `PhoenixClient` były umieszczone w katalogach `Domain/Port/` i `Infrastructure/Http/` wzorowanych na Hexagonal Architecture, która nie jest stosowana nigdzie indziej w projekcie.
+
+**Zmiany:**
+- `src/Domain/Port/PhoenixClientInterface.php` → `src/Service/PhoenixClientInterface.php` (namespace `App\Service`)
+- `src/Infrastructure/Http/PhoenixClient.php` → `src/Service/PhoenixClient.php` (namespace `App\Service`)
+- Usunięto katalogi `src/Domain/` i `src/Infrastructure/`
+- Zaktualizowano `use` w `ProfileController` i `ProfileService`
+- Zaktualizowano `config/services.yaml` i `config/services_test.yaml`
+
+**Cel:** spójność — wszystkie serwisy aplikacji w `src/Service/`.
+
 ### Zadanie 4: Rate-limiting w PhoenixApi (OTP GenServer)
 
 Zaimplementowano rate-limiting na endpoincie `GET /api/photos` z użyciem OTP GenServer (sliding-window algorithm).

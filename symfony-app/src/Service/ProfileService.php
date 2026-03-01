@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Service;
 
-use App\Domain\Port\PhoenixClientInterface;
+use App\Service\PhoenixClientInterface;
 use App\Entity\Photo;
 use App\Entity\User;
 use Doctrine\ORM\EntityManagerInterface;

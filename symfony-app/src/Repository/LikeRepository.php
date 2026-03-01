@@ -2,8 +2,9 @@
 
 declare(strict_types=1);
 
-namespace App\Likes;
+namespace App\Repository;
 
+use App\Entity\Like;
 use App\Entity\Photo;
 use App\Entity\User;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;

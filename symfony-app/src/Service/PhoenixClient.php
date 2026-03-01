@@ -2,9 +2,8 @@
 
 declare(strict_types=1);
 
-namespace App\Infrastructure\Http;
+namespace App\Service;
 
-use App\Domain\Port\PhoenixClientInterface;
 use App\Exception\InvalidPhoenixTokenException;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 

@@ -15,10 +15,10 @@ services:
         resource: '../src/Controller/'
         tags: ['controller.service_arguments']
 
-    App\Likes\LikeRepositoryInterface: '@App\Likes\LikeRepository'
+    App\Repository\LikeRepositoryInterface: '@App\Repository\LikeRepository'
 
-    App\Domain\Port\PhoenixClientInterface: '@App\Infrastructure\Http\PhoenixClient'
+    App\Service\PhoenixClientInterface: '@App\Service\PhoenixClient'
 
-    App\Infrastructure\Http\PhoenixClient:
+    App\Service\PhoenixClient:
         arguments:
             $baseUrl: '%phoenix_base_url%'
