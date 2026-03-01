@@ -58,6 +58,17 @@ Aby ułatwić testowanie aplikacji bez konieczności odpytywania bazy danych, do
 - Token: `demo1234567890abcdef1234567890abcdef1234567890abcdef1234567890ab`
 - Login URL: `http://localhost:8000/auth/demo/demo1234567890abcdef1234567890abcdef1234567890abcdef1234567890ab`
 
+### Refaktor: wydzielenie `addFlash` do `FlashService`
+
+Zduplikowana prywatna metoda `addFlash` (identyczna w `AuthController` i `PhotoController`) została przeniesiona do dedykowanego serwisu.
+
+**Nowy serwis:**
+- `src/Service/FlashService` — wstrzykuje `RequestStack`, udostępnia metodę `add(string $type, string $message): void`
+
+**Zmienione kontrolery:**
+- `AuthController` — usunięto `RequestStack` i `private addFlash()`; dodano `FlashService`; wywołania zamienione na `$this->flashService->add(...)`
+- `PhotoController` — analogicznie jak wyżej
+
 ## Sposób i stopień wykorzystania AI
 
 Do znalezienia i naprawy błędu użyłem Claude Code (claude-sonnet-4-6). AI przejrzało Dockerfiles obu serwisów, wykryło brakującą linię przez porównanie z działającym odpowiednikiem Phoenix, zaproponowało i zastosowało poprawkę, a następnie zweryfikowało ją przez pełne uruchomienie `docker-compose up -d` i przetestowanie wszystkich komend z sekcji "Szybki start" w README.
