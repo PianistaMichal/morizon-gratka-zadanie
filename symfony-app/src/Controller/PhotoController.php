@@ -8,9 +8,8 @@ use App\Enum\FlashType;
 use App\Enum\LikeAction;
 use App\Service\FlashService;
 use App\Service\PhotoLikeService;
-use App\Session\SessionKey;
+use App\Service\SessionService;
 use Symfony\Component\HttpFoundation\RedirectResponse;
-use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Routing\RouterInterface;
@@ -21,12 +20,13 @@ class PhotoController
         private PhotoLikeService $photoLikeService,
         private RouterInterface $router,
         private FlashService $flashService,
+        private SessionService $sessionService,
     ) {}
 
     #[Route('/photo/{id}/like', name: 'photo_like')]
-    public function like(int $id, Request $request): Response
+    public function like(int $id): Response
     {
-        $userId = $request->getSession()->get(SessionKey::USER_ID);
+        $userId = $this->sessionService->getUserId();
 
         if (!$userId) {
             $this->flashService->add(FlashType::ERROR, 'You must be logged in to like photos.');

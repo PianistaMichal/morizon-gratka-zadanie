@@ -7,7 +7,7 @@ namespace App\Controller;
 use App\Enum\FlashType;
 use App\Service\AuthService;
 use App\Service\FlashService;
-use App\Session\SessionKey;
+use App\Service\SessionService;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -20,10 +20,11 @@ class AuthController
         private AuthService $authService,
         private RouterInterface $router,
         private FlashService $flashService,
+        private SessionService $sessionService,
     ) {}
 
     #[Route('/auth/{username}/{token}', name: 'auth_login')]
-    public function login(string $username, string $token, Request $request): Response
+    public function login(string $username, string $token): Response
     {
         if (!$this->authService->validateToken($token)) {
             return new Response('Invalid token', 401);
@@ -35,9 +36,7 @@ class AuthController
             return new Response('User not found', 404);
         }
 
-        $session = $request->getSession();
-        $session->set(SessionKey::USER_ID, $user->getId());
-        $session->set(SessionKey::USERNAME, $username);
+        $this->sessionService->login($user->getId(), $username);
         $this->flashService->add(FlashType::SUCCESS, "Welcome back, {$username}!");
 
         return new RedirectResponse($this->router->generate('home'));

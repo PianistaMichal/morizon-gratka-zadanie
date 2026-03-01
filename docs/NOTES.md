@@ -83,6 +83,19 @@ Wszystkie powtarzające się "magic strings" zastąpione typowanymi stałymi.
 - `PhotoLikeService::toggle()` — sygnatura zmieniona z `: string` na `: LikeAction`
 - `AuthController`, `PhotoController`, `HomeController`, `ProfileController` — użycie powyższych stałych zamiast literałów
 
+### Refaktor: wydzielenie pobierania userId do `SessionService`
+
+Wzorzec `$request->getSession()->get(SessionKey::USER_ID)` był powielony w `HomeController`, `PhotoController` i `ProfileController`.
+
+**Nowy serwis:**
+- `src/Service/SessionService` — wstrzykuje `RequestStack`, udostępnia metody `getUserId(): ?int` i `login(int $userId, string $username): void`; stałe kluczy sesji (`user_id`, `username`) przeniesione z `SessionKey` jako `private const` bezpośrednio do serwisu; klasa `src/Session/SessionKey.php` usunięta
+
+**Zmienione kontrolery:**
+- `HomeController` — usunięto `SessionKey` import i `Request` parametr z akcji; dodano `SessionService`
+- `PhotoController` — usunięto `SessionKey` import i `Request` parametr z akcji `like()`; dodano `SessionService`
+- `ProfileController` — usunięto `SessionKey` import; dodano `SessionService`; `Request` pozostał (potrzebny do `$session->clear()`)
+- `AuthController` — usunięto `SessionKey` import i `Request` parametr z akcji `login()`; dodano `SessionService`; zapis sesji przez `$this->sessionService->login(...)`
+
 ## Sposób i stopień wykorzystania AI
 
 Do znalezienia i naprawy błędu użyłem Claude Code (claude-sonnet-4-6). AI przejrzało Dockerfiles obu serwisów, wykryło brakującą linię przez porównanie z działającym odpowiednikiem Phoenix, zaproponowało i zastosowało poprawkę, a następnie zweryfikowało ją przez pełne uruchomienie `docker-compose up -d` i przetestowanie wszystkich komend z sekcji "Szybki start" w README.
