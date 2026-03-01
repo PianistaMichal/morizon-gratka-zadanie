@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Tests\Controller;
+namespace App\Tests\Functional;
 
 use App\Entity\Photo;
 use App\Tests\AbstractWebTestCase;

@@ -121,10 +121,10 @@ Dodano testy funkcjonalne dla wszystkich 4 kontrolerów Symfony.
 
 **Nowe pliki:**
 - `symfony-app/tests/AbstractWebTestCase.php` — bazowa klasa: `loadFixtures()` przez `ORMExecutor + ORMPurger (DELETE)`, helper `loginAs(string $username)` i `getFirstPhoto()`
-- `symfony-app/tests/Controller/AuthControllerTest.php` — 6 testów: poprawne logowanie, zły token (401), zły username (404), wylogowanie + czyszczenie sesji
-- `symfony-app/tests/Controller/HomeControllerTest.php` — 4 testy: status 200, zawartość zdjęć z fixtures, dostępność dla niezalogowanego i zalogowanego
-- `symfony-app/tests/Controller/PhotoControllerTest.php` — 7 testów: wymóg logowania, like/unlike z flash messages, sprawdzenie `likeCounter` w bazie, multiple users
-- `symfony-app/tests/Controller/ProfileControllerTest.php` — 4 testy: redirect bez sesji, 200 po zalogowaniu, zawartość danych usera, redirect po logout
+- `symfony-app/tests/Functional/AuthControllerTest.php` — 6 testów: poprawne logowanie, zły token (401), zły username (404), wylogowanie + czyszczenie sesji
+- `symfony-app/tests/Functional/HomeControllerTest.php` — 4 testy: status 200, zawartość zdjęć z fixtures, dostępność dla niezalogowanego i zalogowanego
+- `symfony-app/tests/Functional/PhotoControllerTest.php` — 7 testów: wymóg logowania, like/unlike z flash messages, sprawdzenie `likeCounter` w bazie, multiple users
+- `symfony-app/tests/Functional/ProfileControllerTest.php` — 4 testy: redirect bez sesji, 200 po zalogowaniu, zawartość danych usera, redirect po logout
 
 **Wymagania przed uruchomieniem testów (w kontenerze Docker):**
 ```bash
