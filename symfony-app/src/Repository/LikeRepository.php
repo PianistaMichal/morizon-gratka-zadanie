@@ -10,7 +10,7 @@ use App\Entity\User;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
-final class LikeRepository extends ServiceEntityRepository implements LikeRepositoryInterface
+class LikeRepository extends ServiceEntityRepository implements LikeRepositoryInterface
 {
     private ?User $user;
 

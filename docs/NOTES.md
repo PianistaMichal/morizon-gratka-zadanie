@@ -215,6 +215,26 @@ Katalog `src/Likes/` mieszał entity, repozytorium, interfejs i serwis w jednym 
 
 **Cel:** spójność — wszystkie serwisy aplikacji w `src/Service/`.
 
+### Dodanie testów jednostkowych (Unit Tests) dla serwisów Symfony
+
+Dodano testy jednostkowe (PHPUnit `TestCase`, bez bazy danych) pokrywające wszystkie serwisy aplikacji.
+
+**Zmienione pliki:**
+- `symfony-app/src/Repository/LikeRepository.php` — usunięto `final` (umożliwia mockowanie przez PHPUnit)
+
+**Nowe pliki (`symfony-app/tests/Unit/Service/`):**
+- `AuthServiceTest.php` — 3 testy: rzucenie `InvalidTokenException`, `UserNotFoundException`, poprawne wywołanie `SessionService::login()`
+- `LikeServiceTest.php` — 2 testy: wywołanie `createLike` + `updatePhotoCounter`, propagacja wyjątku repozytorium
+- `ProfileServiceTest.php` — 6 testów: `findUser` (znaleziony / nie znaleziony), `savePhoenixToken` (wartość / pusty string → null), `importPhotos` (zlicha i tworzy Photo, 0 przy pustej tablicy)
+- `PhotoLikeServiceTest.php` — 3 testy: `NotFoundHttpException` gdy brak zdjęcia, unlike gdy już polubione, like gdy jeszcze nie polubione
+- `HomeServiceTest.php` — 4 testy: brak danych usera gdy `userId=null`, lajki usera gdy zalogowany, brak lajków gdy user nie znaleziony w DB, przekazanie filtrów do repozytorium
+- `SessionServiceTest.php` — 4 testy: `getUserId` (wartość / null), `login` ustawia `user_id` i `username`, `logout` czyści sesję
+
+**Uruchamianie testów jednostkowych (bez DB):**
+```bash
+php bin/phpunit tests/Unit
+```
+
 ### Zadanie 4: Rate-limiting w PhoenixApi (OTP GenServer)
 
 Zaimplementowano rate-limiting na endpoincie `GET /api/photos` z użyciem OTP GenServer (sliding-window algorithm).
