@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Controller;
 
 use App\Service\ProfileService;
+use App\Session\SessionKey;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -24,7 +25,7 @@ class ProfileController
     public function profile(Request $request): Response
     {
         $session = $request->getSession();
-        $userId = $session->get('user_id');
+        $userId = $session->get(SessionKey::USER_ID);
 
         if (!$userId) {
             return new RedirectResponse($this->router->generate('home'));

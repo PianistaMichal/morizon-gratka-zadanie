@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Enum\FlashType;
 use App\Service\AuthService;
 use App\Service\FlashService;
+use App\Session\SessionKey;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -34,9 +36,9 @@ class AuthController
         }
 
         $session = $request->getSession();
-        $session->set('user_id', $user->getId());
-        $session->set('username', $username);
-        $this->flashService->add('success', 'Welcome back, ' . $username . '!');
+        $session->set(SessionKey::USER_ID, $user->getId());
+        $session->set(SessionKey::USERNAME, $username);
+        $this->flashService->add(FlashType::SUCCESS, "Welcome back, {$username}!");
 
         return new RedirectResponse($this->router->generate('home'));
     }
@@ -45,7 +47,7 @@ class AuthController
     public function logout(Request $request): Response
     {
         $request->getSession()->clear();
-        $this->flashService->add('info', 'You have been logged out successfully.');
+        $this->flashService->add(FlashType::INFO, 'You have been logged out successfully.');
 
         return new RedirectResponse($this->router->generate('home'));
     }

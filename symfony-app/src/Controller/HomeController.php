@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Controller;
 
 use App\Service\HomeService;
+use App\Session\SessionKey;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
@@ -20,7 +21,7 @@ class HomeController
     #[Route('/', name: 'home')]
     public function index(Request $request): Response
     {
-        $userId = $request->getSession()->get('user_id');
+        $userId = $request->getSession()->get(SessionKey::USER_ID);
         $data = $this->homeService->getPhotosData($userId);
 
         return new Response($this->twig->render('home/index.html.twig', $data));

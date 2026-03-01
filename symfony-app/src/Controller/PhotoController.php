@@ -4,8 +4,11 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Enum\FlashType;
+use App\Enum\LikeAction;
 use App\Service\FlashService;
 use App\Service\PhotoLikeService;
+use App\Session\SessionKey;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -23,19 +26,19 @@ class PhotoController
     #[Route('/photo/{id}/like', name: 'photo_like')]
     public function like(int $id, Request $request): Response
     {
-        $userId = $request->getSession()->get('user_id');
+        $userId = $request->getSession()->get(SessionKey::USER_ID);
 
         if (!$userId) {
-            $this->flashService->add('error', 'You must be logged in to like photos.');
+            $this->flashService->add(FlashType::ERROR, 'You must be logged in to like photos.');
             return new RedirectResponse($this->router->generate('home'));
         }
 
         $action = $this->photoLikeService->toggle($userId, $id);
 
-        if ($action === 'liked') {
-            $this->flashService->add('success', 'Photo liked!');
+        if ($action === LikeAction::LIKED) {
+            $this->flashService->add(FlashType::SUCCESS, 'Photo liked!');
         } else {
-            $this->flashService->add('info', 'Photo unliked!');
+            $this->flashService->add(FlashType::INFO, 'Photo unliked!');
         }
 
         return new RedirectResponse($this->router->generate('home'));

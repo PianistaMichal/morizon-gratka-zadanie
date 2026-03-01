@@ -6,6 +6,7 @@ namespace App\Service;
 
 use App\Entity\Photo;
 use App\Entity\User;
+use App\Enum\LikeAction;
 use App\Likes\LikeRepository;
 use App\Likes\LikeService;
 use Doctrine\ORM\EntityManagerInterface;
@@ -19,7 +20,7 @@ class PhotoLikeService
         private EntityManagerInterface $em,
     ) {}
 
-    public function toggle(int $userId, int $photoId): string
+    public function toggle(int $userId, int $photoId): LikeAction
     {
         $user = $this->em->getRepository(User::class)->find($userId);
         $photo = $this->em->getRepository(Photo::class)->find($photoId);
@@ -32,10 +33,10 @@ class PhotoLikeService
 
         if ($this->likeRepository->hasUserLikedPhoto($photo)) {
             $this->likeRepository->unlikePhoto($photo);
-            return 'unliked';
+            return LikeAction::UNLIKED;
         }
 
         $this->likeService->execute($photo);
-        return 'liked';
+        return LikeAction::LIKED;
     }
 }

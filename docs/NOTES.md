@@ -69,6 +69,20 @@ Zduplikowana prywatna metoda `addFlash` (identyczna w `AuthController` i `PhotoC
 - `AuthController` — usunięto `RequestStack` i `private addFlash()`; dodano `FlashService`; wywołania zamienione na `$this->flashService->add(...)`
 - `PhotoController` — analogicznie jak wyżej
 
+### Refaktor: hardcoded strings wyciągnięte do enumów i stałych
+
+Wszystkie powtarzające się "magic strings" zastąpione typowanymi stałymi.
+
+**Nowe pliki:**
+- `src/Enum/FlashType.php` — backed string enum (`SUCCESS`, `ERROR`, `INFO`); zastępuje literały `'success'`, `'error'`, `'info'`
+- `src/Enum/LikeAction.php` — backed string enum (`LIKED`, `UNLIKED`); zastępuje literały `'liked'`, `'unliked'`
+- `src/Session/SessionKey.php` — klasa z stałymi (`USER_ID`, `USERNAME`); zastępuje literały `'user_id'`, `'username'`
+
+**Zmienione pliki:**
+- `FlashService::add()` — sygnatura zmieniona z `string $type` na `FlashType $type`
+- `PhotoLikeService::toggle()` — sygnatura zmieniona z `: string` na `: LikeAction`
+- `AuthController`, `PhotoController`, `HomeController`, `ProfileController` — użycie powyższych stałych zamiast literałów
+
 ## Sposób i stopień wykorzystania AI
 
 Do znalezienia i naprawy błędu użyłem Claude Code (claude-sonnet-4-6). AI przejrzało Dockerfiles obu serwisów, wykryło brakującą linię przez porównanie z działającym odpowiednikiem Phoenix, zaproponowało i zastosowało poprawkę, a następnie zweryfikowało ją przez pełne uruchomienie `docker-compose up -d` i przetestowanie wszystkich komend z sekcji "Szybki start" w README.
