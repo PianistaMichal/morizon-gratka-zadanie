@@ -16,6 +16,15 @@ class AppFixtures extends Fixture
     {
         $usersData = [
             [
+                'username' => 'demo',
+                'email' => 'demo@example.com',
+                'name' => 'Demo',
+                'lastName' => 'User',
+                'age' => 25,
+                'bio' => 'Demo account for testing purposes.',
+                'token' => 'demo1234567890abcdef1234567890abcdef1234567890abcdef1234567890ab',
+            ],
+            [
                 'username' => 'nature_lover',
                 'email' => 'nature@example.com',
                 'name' => 'Emma',
@@ -65,10 +74,10 @@ class AppFixtures extends Fixture
 
         $manager->flush();
 
-        foreach ($users as $user) {
+        foreach ($usersData as $index => $userData) {
             $authToken = new AuthToken();
-            $authToken->setToken(bin2hex(random_bytes(32)))
-                ->setUser($user);
+            $authToken->setToken($userData['token'] ?? bin2hex(random_bytes(32)))
+                ->setUser($users[$index]);
 
             $manager->persist($authToken);
         }

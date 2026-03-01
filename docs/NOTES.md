@@ -45,6 +45,19 @@ Wszystkie kontrolery usunęły `extends AbstractController` i przeszły na wstrz
 - `config/services.yaml` — dodano alias `LikeRepositoryInterface → LikeRepository` dla autowiring `LikeService`
 - `HomeController` — zmieniono adnotację `@Route` (docblock) na atrybut `#[Route]`
 
+### Dodanie konta demo z predefiniowanym tokenem
+
+Aby ułatwić testowanie aplikacji bez konieczności odpytywania bazy danych, dodano konto `demo` z hardcoded tokenem.
+
+**Zmiany:**
+- `symfony-app/src/DataFixtures/AppFixtures.php` — dodano usera `demo` jako pierwszy element `$usersData`; token jest teraz opcjonalnym polem `token` w tablicy (jeśli brak — generowany losowo jak dotychczas)
+- `README.md` — dodano sekcję "Logowanie do Symfony App" z bezpośrednim linkiem do logowania na konto demo
+
+**Dane konta demo:**
+- Username: `demo`
+- Token: `demo1234567890abcdef1234567890abcdef1234567890abcdef1234567890ab`
+- Login URL: `http://localhost:8000/auth/demo/demo1234567890abcdef1234567890abcdef1234567890abcdef1234567890ab`
+
 ## Sposób i stopień wykorzystania AI
 
 Do znalezienia i naprawy błędu użyłem Claude Code (claude-sonnet-4-6). AI przejrzało Dockerfiles obu serwisów, wykryło brakującą linię przez porównanie z działającym odpowiednikiem Phoenix, zaproponowało i zastosowało poprawkę, a następnie zweryfikowało ją przez pełne uruchomienie `docker-compose up -d` i przetestowanie wszystkich komend z sekcji "Szybki start" w README.
