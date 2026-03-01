@@ -6,7 +6,7 @@ namespace App\Tests;
 
 use App\DataFixtures\AppFixtures;
 use App\Entity\Photo;
-use App\Infrastructure\Http\PhoenixClient;
+use App\Service\PhoenixClient;
 use Doctrine\Common\DataFixtures\Executor\ORMExecutor;
 use Doctrine\Common\DataFixtures\Purger\ORMPurger;
 use Doctrine\ORM\EntityManagerInterface;

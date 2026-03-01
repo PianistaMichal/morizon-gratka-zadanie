@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace App\Tests\Controller;
 
-use App\Domain\Port\PhoenixClientInterface;
+use App\Service\PhoenixClientInterface;
 use App\Exception\InvalidPhoenixTokenException;
-use App\Infrastructure\Http\PhoenixClient;
+use App\Service\PhoenixClient;
 use App\Tests\AbstractWebTestCase;
 use PHPUnit\Framework\MockObject\MockObject;
 
