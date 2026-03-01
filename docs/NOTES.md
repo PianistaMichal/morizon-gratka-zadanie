@@ -160,6 +160,24 @@ Dodano możliwość ręcznego wpisania tokenu dostępu do PhoenixApi w profilu u
 - `PhoenixClient` jest `synthetic: true` w `services_test.yaml` — testy ustawiają mock via `static::getContainer()->set(PhoenixClient::class, $mock)` przed żądaniem
 - URL PhoenixApi konfigurowany przez zmienną środowiskową `PHOENIX_BASE_URL` (w docker-compose: `http://phoenix:4000`)
 
+### Zadanie 3: Filtrowanie zdjęć na stronie głównej
+
+Dodano możliwość filtrowania zdjęć na stronie głównej po polach: `location`, `camera`, `description`, `taken_at`, `username`.
+
+**Zmienione pliki:**
+- `src/Repository/PhotoRepository.php` — nowa metoda `findAllWithUsersFiltered(array $filters): array`; QueryBuilder z opcjonalnymi klauzulami `LIKE` dla tekstowych pól oraz filtrowanie po dacie (`takenAt >= start AND takenAt < nextDay`) zamiast funkcji `DATE()`
+- `src/Service/HomeService.php` — `getPhotosData()` przyjmuje teraz `array $filters = []` i przekazuje do repozytorium
+- `src/Controller/HomeController.php` — akcja `index()` przyjmuje `Request`, odczytuje parametry GET (`location`, `camera`, `description`, `taken_at`, `username`), filtruje puste wartości, przekazuje filtry do serwisu i do szablonu
+- `templates/home/index.html.twig` — dodano pasek filtrów (formularz GET) powyżej siatki zdjęć; formularz zachowuje aktywne wartości między żądaniami; link "Clear" zeruje filtry
+
+**Szczegóły implementacji:**
+- Wyszukiwanie tekstowe: `LIKE '%term%'` (case-insensitive zależy od collation bazy)
+- Filtrowanie daty: zakres `[date 00:00:00, date+1 00:00:00)` bez custom DQL functions
+- Puste filtry są pomijane (brak efektu na zapytanie) dzięki `array_filter()` w kontrolerze
+
+**Testy:**
+- `tests/Controller/HomeControllerFilterTest.php` — 14 testów: obecność formularza, filtr po każdym polu, filtr łączony (camera + username), pusty filtr = brak efektu, zły format daty ignorowany, zachowanie wartości w formularzu po filtrowaniu
+
 ## Sposób i stopień wykorzystania AI
 
 Do znalezienia i naprawy błędu użyłem Claude Code (claude-sonnet-4-6). AI przejrzało Dockerfiles obu serwisów, wykryło brakującą linię przez porównanie z działającym odpowiednikiem Phoenix, zaproponowało i zastosowało poprawkę, a następnie zweryfikowało ją przez pełne uruchomienie `docker-compose up -d` i przetestowanie wszystkich komend z sekcji "Szybki start" w README.

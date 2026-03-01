@@ -149,10 +149,126 @@
             font-size: 2em;
             margin-bottom: 10px;
         }
+
+        .filter-bar {
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            padding: 20px 30px;
+            margin: 20px auto;
+            max-width: 1240px;
+        }
+
+        .filter-bar form {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            align-items: flex-end;
+        }
+
+        .filter-field {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            flex: 1 1 160px;
+        }
+
+        .filter-field label {
+            color: rgba(255,255,255,0.85);
+            font-size: 0.8em;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .filter-field input {
+            padding: 8px 12px;
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.3);
+            background: rgba(255,255,255,0.15);
+            color: white;
+            font-size: 0.9em;
+            outline: none;
+        }
+
+        .filter-field input::placeholder {
+            color: rgba(255,255,255,0.5);
+        }
+
+        .filter-field input:focus {
+            border-color: rgba(255,255,255,0.7);
+            background: rgba(255,255,255,0.2);
+        }
+
+        .filter-actions {
+            display: flex;
+            gap: 8px;
+            align-items: flex-end;
+        }
+
+        .btn-filter {
+            padding: 9px 20px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-size: 0.9em;
+            font-weight: 600;
+            transition: all 0.2s ease;
+        }
+
+        .btn-filter-apply {
+            background: white;
+            color: #667eea;
+        }
+
+        .btn-filter-apply:hover {
+            background: #f0f0ff;
+        }
+
+        .btn-filter-clear {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+        }
+
+        .btn-filter-clear:hover {
+            background: rgba(255,255,255,0.3);
+        }
     </style>
 {% endblock %}
 
 {% block body %}
+    <div class="filter-bar">
+        <form method="GET" action="{{ path('home') }}">
+            <div class="filter-field">
+                <label for="f-location">Location</label>
+                <input id="f-location" type="text" name="location" value="{{ filters.location|default('') }}" placeholder="e.g. Paris">
+            </div>
+            <div class="filter-field">
+                <label for="f-camera">Camera</label>
+                <input id="f-camera" type="text" name="camera" value="{{ filters.camera|default('') }}" placeholder="e.g. Canon EOS">
+            </div>
+            <div class="filter-field">
+                <label for="f-description">Description</label>
+                <input id="f-description" type="text" name="description" value="{{ filters.description|default('') }}" placeholder="keyword…">
+            </div>
+            <div class="filter-field">
+                <label for="f-taken_at">Date taken</label>
+                <input id="f-taken_at" type="date" name="taken_at" value="{{ filters.taken_at|default('') }}">
+            </div>
+            <div class="filter-field">
+                <label for="f-username">Username</label>
+                <input id="f-username" type="text" name="username" value="{{ filters.username|default('') }}" placeholder="e.g. john">
+            </div>
+            <div class="filter-actions">
+                <button type="submit" class="btn-filter btn-filter-apply">Filter</button>
+                <a href="{{ path('home') }}" class="btn-filter btn-filter-clear">Clear</a>
+            </div>
+        </form>
+    </div>
+
     {% if photos|length > 0 %}
         <div class="photo-grid">
             {% for photo in photos %}

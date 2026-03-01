@@ -17,9 +17,9 @@ class HomeService
         private EntityManagerInterface $em,
     ) {}
 
-    public function getPhotosData(?int $userId): array
+    public function getPhotosData(?int $userId, array $filters = []): array
     {
-        $photos = $this->photoRepository->findAllWithUsers();
+        $photos = $this->photoRepository->findAllWithUsersFiltered($filters);
         $currentUser = null;
         $userLikes = [];
 
