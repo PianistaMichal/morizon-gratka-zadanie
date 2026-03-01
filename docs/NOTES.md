@@ -1,3 +1,40 @@
+## Sposób i stopień wykorzystania AI
+
+Korzystałem z Claude (Anthropic) jako narzędzia wspomagającego — głównie do:
+- generowania boilerplate'u (testy jednostkowe, migracje Doctrine, struktury klas)
+- weryfikowania poprawności konfiguracji (PHPStan, PHP CS Fixer, docker-compose healthchecks)
+- szybkiego sprawdzania składni Elixir/OTP, którą znam słabiej niż PHP
+
+Wszystkie decyzje architektoniczne podejmowałem samodzielnie: wybór warstwy serwisów zamiast grubych kontrolerów, rezygnacja z Hexagonal Architecture na rzecz prostszej struktury katalogów spójnej z resztą projektu, projektowanie rate-limitera jako GenServera z sliding-window. Każdy wygenerowany fragment kodu czytałem, rozumiałem i często przerabiałem — szczególnie w miejscach gdzie AI proponowało nadmiarową złożoność (np. pierwotna propozycja rate-limitera używała ETS zamiast stanu GenServera; uprościłem).
+
+Traktuję AI jak para-programistę z dużą pamięcią składniową i zerowym kontekstem biznesowym — przydatny do pisania, bezużyteczny do myślenia.
+
+---
+
+## Rzeczy, które zrobiłbym inaczej mając więcej czasu
+
+**Autentykacja przez token w URL** to największy dług projektowy, który odziedziczyłem i pozostawiłem bez zmian. Token w ścieżce (`/auth/{username}/{token}`) ląduje w logach serwera, historii przeglądarki i nagłówku `Referer`. Docelowo: POST z tokenem w body lub standardowa sesja cookie z CSRF.
+
+**Brak walidacji danych wejściowych na poziomie DTOs/FormTypes.** Filtry z GET są przekazywane bezpośrednio do QueryBuildera — PDO parametryzuje zapytania, więc SQL injection nie grozi, ale brak walidacji długości/formatu parametrów to luźny kontrakt. Dodałbym `Assert` Symfony lub dedykowane DTO z walidacją.
+
+**Testy integracyjne PhoenixApi są w rzeczywistości testami kontrolera z mockiem** — nie testują faktycznego klienta HTTP (`PhoenixClient`). Brakuje testów z Bypass (Elixir) lub podobnym HTTP stubbem po stronie PHP (np. `php-http/mock-client`), które weryfikowałyby parsowanie odpowiedzi i obsługę błędów HTTP.
+
+**Rate-limiter przechowuje stan w pamięci GenServera** — przy restarcie procesu liczniki zerują się. W produkcji użyłbym Redis (Redix) lub ETS z tabelą `:public` żyjącą poza GenServerem, żeby restart nie resetował limitów.
+
+**Brak paginacji** na stronie głównej. Przy 12 zdjęciach z fixtures to niewidoczny problem, ale `findAllWithUsersFiltered()` robi `SELECT *` bez `LIMIT`.
+
+---
+
+## Propozycje usprawnień, których nie zdążyłem zaimplementować
+
+- **CQRS-lite dla importu zdjęć** — `ProfileController::import()` robi HTTP request synchronicznie w trakcie obsługi żądania webowego. Przy wolnym PhoenixApi użytkownik czeka. Lepiej: Symfony Messenger + worker, import w tle, wynik przez polling lub Server-Sent Events.
+- **Indeksy na `photos.taken_at`, `photos.location`, `photos.camera`** — filtrowanie robi `LIKE '%term%'` bez indeksów. Dla małego datasetu nieistotne, przy większej skali — full table scan.
+- **Separacja środowisk w docker-compose** — aktualnie jeden plik łączy dev i prod. `docker-compose.override.yml` dla volume'ów deweloperskich i bind-mountów; bazowy `docker-compose.yml` tylko dla prod.
+- **OpenAPI/Swagger dla PhoenixApi** — brak dokumentacji kontraktu między serwisami. `PhoenixClient` jest ścisło powiązany z kształtem odpowiedzi API; każda zmiana w Phoenix wymaga ręcznej synchronizacji.
+- **Logi strukturalne** — obecnie Symfony loguje do `var/log/` (w named volume, niedostępne z hosta bez `docker exec`). Warto przekierować na stdout i zebrać np. Loki + Grafana lub chociaż ujednolicić format JSON.
+
+---
+
 ## Napotkane problemy i rozwiązania
 
 ### Błąd: kontener Symfony nie startował
