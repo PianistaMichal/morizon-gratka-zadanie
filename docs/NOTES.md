@@ -115,6 +115,29 @@ Logika walidacyjna przeniesiona z `AuthController` do `AuthService` z użyciem c
 
 **Cel:** kontroler odpowiada tylko za mapowanie na HTTP response; logika biznesowa i warunki błędów należą do serwisu.
 
+### Dodanie testów funkcjonalnych (WebTestCase)
+
+Dodano testy funkcjonalne dla wszystkich 4 kontrolerów Symfony.
+
+**Nowe pliki:**
+- `symfony-app/tests/AbstractWebTestCase.php` — bazowa klasa: `loadFixtures()` przez `ORMExecutor + ORMPurger (DELETE)`, helper `loginAs(string $username)` i `getFirstPhoto()`
+- `symfony-app/tests/Controller/AuthControllerTest.php` — 6 testów: poprawne logowanie, zły token (401), zły username (404), wylogowanie + czyszczenie sesji
+- `symfony-app/tests/Controller/HomeControllerTest.php` — 4 testy: status 200, zawartość zdjęć z fixtures, dostępność dla niezalogowanego i zalogowanego
+- `symfony-app/tests/Controller/PhotoControllerTest.php` — 7 testów: wymóg logowania, like/unlike z flash messages, sprawdzenie `likeCounter` w bazie, multiple users
+- `symfony-app/tests/Controller/ProfileControllerTest.php` — 4 testy: redirect bez sesji, 200 po zalogowaniu, zawartość danych usera, redirect po logout
+
+**Wymagania przed uruchomieniem testów (w kontenerze Docker):**
+```bash
+php bin/console doctrine:database:create --env=test
+php bin/console doctrine:migrations:migrate --env=test --no-interaction
+php bin/phpunit
+```
+
+**Uwagi:**
+- Token demo znany z fixtures: `demo1234567890abcdef...` — używany w `loginAs()` dla wszystkich userów (AuthService nie sprawdza powiązania tokenu z userem)
+- Fixtures ładowane są w `setUp()` każdego testu → pełna izolacja stanu DB
+- IDs zdjęć nie są hardcodowane — testy pytają bazę o `findOneBy([], ['id' => 'ASC'])`
+
 ## Sposób i stopień wykorzystania AI
 
 Do znalezienia i naprawy błędu użyłem Claude Code (claude-sonnet-4-6). AI przejrzało Dockerfiles obu serwisów, wykryło brakującą linię przez porównanie z działającym odpowiednikiem Phoenix, zaproponowało i zastosowało poprawkę, a następnie zweryfikowało ją przez pełne uruchomienie `docker-compose up -d` i przetestowanie wszystkich komend z sekcji "Szybki start" w README.

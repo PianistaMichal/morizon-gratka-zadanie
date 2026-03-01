@@ -39,6 +39,11 @@
       "migrations/"
     ]
   },
+  "autoload-dev": {
+    "psr-4": {
+      "App\\Tests\\": "tests/"
+    }
+  },
   "config": {
     "sort-packages": true,
     "allow-plugins": {

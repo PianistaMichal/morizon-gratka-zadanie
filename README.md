@@ -74,9 +74,20 @@ docker-compose restart symfony
 ```
 
 ### Uruchamianie testów
+
+Przed pierwszym uruchomieniem testów należy przygotować bazę testową (`symfony_app_test`):
+
 ```bash
-docker-compose exec symfony php bin/phpunit
+docker-compose exec symfony php bin/console doctrine:database:create --env=test
+docker-compose exec symfony php bin/console doctrine:migrations:migrate --env=test --no-interaction
 ```
+
+Uruchomienie testów:
+```bash
+docker-compose exec symfony vendor/bin/phpunit
+```
+
+Fixtures są ładowane automatycznie przez testy — nie trzeba ich osobno seedować dla `env=test`.
 
 ## Komendy Phoenix
 
