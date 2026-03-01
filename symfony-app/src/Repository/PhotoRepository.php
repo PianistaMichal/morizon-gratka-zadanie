@@ -43,7 +43,7 @@ class PhotoRepository extends ServiceEntityRepository
         }
 
         if (!empty($filters['description'])) {
-            $qb->andWhere('p.description LIKE :description')
+            $qb->andWhere('LOWER(p.description) LIKE LOWER(:description)')
                 ->setParameter('description', '%' . $filters['description'] . '%');
         }
 

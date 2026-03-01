@@ -1,0 +1,8 @@
+#!/bin/bash
+
+set -e
+
+php bin/console doctrine:database:create --env=test --if-not-exists --no-interaction
+php bin/console doctrine:migrations:migrate --env=test --no-interaction
+
+vendor/bin/phpunit

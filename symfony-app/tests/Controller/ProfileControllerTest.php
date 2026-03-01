@@ -18,6 +18,8 @@ class ProfileControllerTest extends AbstractWebTestCase
     {
         parent::setUp();
 
+        $this->client->disableReboot();
+
         $this->mockPhoenixClient = $this->createMock(PhoenixClientInterface::class);
         static::getContainer()->set(PhoenixClient::class, $this->mockPhoenixClient);
     }

@@ -34,6 +34,7 @@ services:
       - phoenix-db
     environment:
       DATABASE_URL: ecto://postgres:postgres@phoenix-db/phoenix_api
+      DB_HOST: phoenix-db
       SECRET_KEY_BASE: ${PHOENIX_SECRET_KEY_BASE:-thisisasecret111}
       PHX_HOST: 0.0.0.0
       PORT: 4000

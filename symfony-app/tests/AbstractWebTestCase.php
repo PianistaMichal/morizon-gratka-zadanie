@@ -6,6 +6,7 @@ namespace App\Tests;
 
 use App\DataFixtures\AppFixtures;
 use App\Entity\Photo;
+use App\Infrastructure\Http\PhoenixClient;
 use Doctrine\Common\DataFixtures\Executor\ORMExecutor;
 use Doctrine\Common\DataFixtures\Purger\ORMPurger;
 use Doctrine\ORM\EntityManagerInterface;
@@ -21,6 +22,8 @@ abstract class AbstractWebTestCase extends WebTestCase
     protected function setUp(): void
     {
         $this->client = static::createClient();
+        $this->client->disableReboot();
+        static::getContainer()->set(PhoenixClient::class, $this->createMock(PhoenixClient::class));
         $this->loadFixtures();
     }
 
