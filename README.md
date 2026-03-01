@@ -16,7 +16,7 @@ docker-compose up -d
 
 # Konfiguracja bazy danych Symfony
 docker-compose exec symfony php bin/console doctrine:migrations:migrate --no-interaction
-docker-compose exec symfony php bin/console app:seed
+docker-compose exec symfony php bin/console doctrine:fixtures:load --no-interaction
 
 # Konfiguracja bazy danych Phoenix
 docker-compose exec phoenix mix ecto.migrate
@@ -38,7 +38,7 @@ docker-compose exec symfony php bin/console doctrine:migrations:migrate --no-int
 ```bash
 docker-compose exec symfony php bin/console doctrine:schema:drop --force --full-database
 docker-compose exec symfony php bin/console doctrine:migrations:migrate --no-interaction
-docker-compose exec symfony php bin/console app:seed
+docker-compose exec symfony php bin/console doctrine:fixtures:load --no-interaction
 ```
 
 ### Czyszczenie pamięci podręcznej (Cache)

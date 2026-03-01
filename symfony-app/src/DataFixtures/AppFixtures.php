@@ -2,37 +2,18 @@
 
 declare(strict_types=1);
 
-namespace App\Command;
+namespace App\DataFixtures;
 
 use App\Entity\AuthToken;
 use App\Entity\Photo;
 use App\Entity\User;
-use Doctrine\ORM\EntityManagerInterface;
-use Symfony\Component\Console\Attribute\AsCommand;
-use Symfony\Component\Console\Command\Command;
-use Symfony\Component\Console\Input\InputInterface;
-use Symfony\Component\Console\Output\OutputInterface;
-use Symfony\Component\Console\Style\SymfonyStyle;
+use Doctrine\Bundle\FixturesBundle\Fixture;
+use Doctrine\Persistence\ObjectManager;
 
-#[AsCommand(
-    name: 'app:seed',
-    description: 'Seed the database with sample users and photos',
-)]
-class SeedDatabaseCommand extends Command
+class AppFixtures extends Fixture
 {
-    public function __construct(
-        private EntityManagerInterface $entityManager
-    ) {
-        parent::__construct();
-    }
-
-    protected function execute(InputInterface $input, OutputInterface $output): int
+    public function load(ObjectManager $manager): void
     {
-        $io = new SymfonyStyle($input, $output);
-
-        $io->title('Seeding database with sample data');
-
-        // Sample users data
         $usersData = [
             [
                 'username' => 'nature_lover',
@@ -78,29 +59,20 @@ class SeedDatabaseCommand extends Command
                 ->setAge($userData['age'])
                 ->setBio($userData['bio']);
 
-            $this->entityManager->persist($user);
+            $manager->persist($user);
             $users[] = $user;
-
-            $io->text("Created user: {$userData['username']}");
         }
 
-        $this->entityManager->flush();
+        $manager->flush();
 
-        // Create auth tokens for each user
         foreach ($users as $user) {
-            $token = bin2hex(random_bytes(32));
             $authToken = new AuthToken();
-            $authToken->setToken($token)
+            $authToken->setToken(bin2hex(random_bytes(32)))
                 ->setUser($user);
 
-            $this->entityManager->persist($authToken);
-
-            $io->text("Created auth token for {$user->getUsername()}: {$token}");
+            $manager->persist($authToken);
         }
 
-        $this->entityManager->flush();
-
-        // Sample photos data with picsum URLs (nature/animals themed)
         $photosData = [
             [
                 'imageUrl' => 'https://picsum.photos/seed/forest1/800/600',
@@ -209,16 +181,9 @@ class SeedDatabaseCommand extends Command
                 ->setTakenAt(new \DateTimeImmutable($photoData['takenAt']))
                 ->setUser($users[$photoData['userIndex']]);
 
-            $this->entityManager->persist($photo);
-
-            $io->text("Created photo: {$photoData['description']}");
+            $manager->persist($photo);
         }
 
-        $this->entityManager->flush();
-
-        $io->success('Database seeded successfully!');
-        $io->info(sprintf('Created %d users, %d auth tokens, and %d photos', count($usersData), count($usersData), count($photosData)));
-
-        return Command::SUCCESS;
+        $manager->flush();
     }
 }
