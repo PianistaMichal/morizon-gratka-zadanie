@@ -10,6 +10,14 @@ Dostęp do aplikacji:
 - Symfony App: http://localhost:8000
 - Phoenix API: http://localhost:4000
 
+Przy pierwszym uruchomieniu odpal
+
+```
+docker-compose logs -f symfony
+```
+
+I patrz aż wszystko się zainstaluje i server http zacznie nasłuchiwać
+
 ## Logowanie do Symfony App
 
 Aplikacja nie posiada formularza logowania. Zamiast tego logowanie odbywa się przez specjalny URL:
