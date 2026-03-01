@@ -6,6 +6,7 @@ defmodule PhoenixApiWeb.PhotoController do
   import Ecto.Query
 
   plug PhoenixApiWeb.Plugs.Authenticate
+  plug PhoenixApiWeb.Plugs.RateLimit
 
   def index(conn, _params) do
     current_user = conn.assigns.current_user

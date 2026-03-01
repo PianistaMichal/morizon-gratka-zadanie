@@ -57,6 +57,45 @@ defmodule PhoenixApiWeb.PhotoControllerTest do
     {:ok, user: user, other_user: other_user, photo1: photo1, photo2: photo2}
   end
 
+  describe "GET /api/photos — rate limiting" do
+    test "returns 429 after exceeding per-user limit", %{conn: conn} do
+      # Send 5 allowed requests
+      for _ <- 1..5 do
+        conn
+        |> put_req_header("access-token", "valid_test_token_123")
+        |> get("/api/photos")
+        |> json_response(200)
+      end
+
+      # 6th request must be rejected
+      conn =
+        conn
+        |> put_req_header("access-token", "valid_test_token_123")
+        |> get("/api/photos")
+
+      assert json_response(conn, 429) == %{
+               "errors" => %{"detail" => "Too Many Requests"}
+             }
+    end
+
+    test "per-user limits are independent — other user is not blocked", %{conn: conn} do
+      # Exhaust the limit for the first user
+      for _ <- 1..5 do
+        conn
+        |> put_req_header("access-token", "valid_test_token_123")
+        |> get("/api/photos")
+      end
+
+      # Second user must still be served normally
+      conn =
+        conn
+        |> put_req_header("access-token", "other_user_token_456")
+        |> get("/api/photos")
+
+      assert json_response(conn, 200)
+    end
+  end
+
   describe "GET /api/photos" do
     test "returns photos for authenticated user", %{conn: conn, photo1: photo1, photo2: photo2} do
       conn =

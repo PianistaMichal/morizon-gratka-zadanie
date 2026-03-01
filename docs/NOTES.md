@@ -178,6 +178,35 @@ Dodano możliwość filtrowania zdjęć na stronie głównej po polach: `locatio
 **Testy:**
 - `tests/Controller/HomeControllerFilterTest.php` — 14 testów: obecność formularza, filtr po każdym polu, filtr łączony (camera + username), pusty filtr = brak efektu, zły format daty ignorowany, zachowanie wartości w formularzu po filtrowaniu
 
-## Sposób i stopień wykorzystania AI
+### Zadanie 4: Rate-limiting w PhoenixApi (OTP GenServer)
 
-Do znalezienia i naprawy błędu użyłem Claude Code (claude-sonnet-4-6). AI przejrzało Dockerfiles obu serwisów, wykryło brakującą linię przez porównanie z działającym odpowiednikiem Phoenix, zaproponowało i zastosowało poprawkę, a następnie zweryfikowało ją przez pełne uruchomienie `docker-compose up -d` i przetestowanie wszystkich komend z sekcji "Szybki start" w README.
+Zaimplementowano rate-limiting na endpoincie `GET /api/photos` z użyciem OTP GenServer (sliding-window algorithm).
+
+**Limity:**
+- Per użytkownik: max **5 żądań na 10 minut**
+- Globalny: max **1000 żądań na godzinę**
+
+**Nowe pliki:**
+- `phoenix-api/lib/phoenix_api/rate_limiter.ex` — GenServer zarządzający stanem limitów w pamięci; używa `System.monotonic_time(:millisecond)` do sliding window; co 5 minut samoczynnie usuwa stare wpisy (`Process.send_after/3`)
+- `phoenix-api/lib/phoenix_api_web/plugs/rate_limit.ex` — Plug wywołujący `RateLimiter.check_and_record(user_id)`; w przypadku przekroczenia limitu zwraca HTTP 429
+
+**Zmienione pliki:**
+- `phoenix-api/lib/phoenix_api/application.ex` — dodano `PhoenixApi.RateLimiter` do drzewa supervisora (strategia `one_for_one`), co zapewnia automatyczny restart procesu GenServera
+- `phoenix-api/lib/phoenix_api_web/controllers/photo_controller.ex` — dodano `plug PhoenixApiWeb.Plugs.RateLimit` po `Authenticate`
+
+**Architektura OTP:**
+- `RateLimiter` startuje jako nazwany proces (`name: __MODULE__`) nadzorowany przez główny supervisor aplikacji
+- Stan: `%{config: %{...}, user_requests: %{user_id => [timestamps]}, global_requests: [timestamps]}`
+- Limity przekazywane przez `start_link/1` opts (domyślne = produkcyjne) — pozwala startować izolowane procesy w testach z małymi limitami
+- Każde `handle_call` filtruje stare timestampy, sprawdza limity i atomowo zapisuje nowe żądanie — brak race conditions dzięki jednowątkowej naturze GenServera
+- Cleanup co 5 minut usuwa wpisy użytkowników nieaktywnych > 10 minut
+
+**Testy (15 testów, 0 failures):**
+- `test/phoenix_api/rate_limiter_test.exs` — 7 unit testów (async); startują izolowany GenServer z małymi limitami (`user_limit: 3, user_window_ms: 500, global_limit: 5, global_window_ms: 1000`); testują: przepuszczanie do limitu, blokowanie po przekroczeniu, niezależność między userami, odblokowanie po wygaśnięciu okna, priorytet limitu globalnego
+- `test/phoenix_api_web/controllers/photo_controller_test.exs` — 2 integration testy HTTP: 429 po 6. żądaniu tego samego usera, niezależność limitów między userami
+
+**Uruchamianie testów:**
+```bash
+docker compose exec -e DB_HOST=phoenix-db phoenix sh -c "MIX_ENV=test mix test"
+```
+
