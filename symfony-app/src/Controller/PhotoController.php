@@ -4,50 +4,49 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
-use App\Entity\Photo;
-use App\Entity\User;
-use App\Likes\LikeRepository;
-use App\Likes\LikeService;
-use Doctrine\ORM\EntityManagerInterface;
-use Doctrine\Persistence\ManagerRegistry;
-use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use App\Service\PhotoLikeService;
+use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\Session\Flash\FlashBagInterface;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Routing\RouterInterface;
 
-class PhotoController extends AbstractController
+class PhotoController
 {
-    #[Route('/photo/{id}/like', name: 'photo_like')]
-    public function like($id, Request $request, EntityManagerInterface $em, ManagerRegistry $managerRegistry): Response
-    {
-        $likeRepository = new LikeRepository($managerRegistry);
-        $likeService = new LikeService($likeRepository);
+    public function __construct(
+        private PhotoLikeService $photoLikeService,
+        private RouterInterface $router,
+        private RequestStack $requestStack,
+    ) {}
 
-        $session = $request->getSession();
-        $userId = $session->get('user_id');
+    #[Route('/photo/{id}/like', name: 'photo_like')]
+    public function like(int $id, Request $request): Response
+    {
+        $userId = $request->getSession()->get('user_id');
 
         if (!$userId) {
             $this->addFlash('error', 'You must be logged in to like photos.');
-            return $this->redirectToRoute('home');
+            return new RedirectResponse($this->router->generate('home'));
         }
 
-        $user = $em->getRepository(User::class)->find($userId);
-        $photo = $em->getRepository(Photo::class)->find($id);
+        $action = $this->photoLikeService->toggle($userId, $id);
 
-        $likeRepository->setUser($user);
-
-        if (!$photo) {
-            throw $this->createNotFoundException('Photo not found');
-        }
-
-        if ($likeRepository->hasUserLikedPhoto($photo)) {
-            $likeRepository->unlikePhoto($photo);
-            $this->addFlash('info', 'Photo unliked!');
-        } else {
-            $likeService->execute($photo);
+        if ($action === 'liked') {
             $this->addFlash('success', 'Photo liked!');
+        } else {
+            $this->addFlash('info', 'Photo unliked!');
         }
 
-        return $this->redirectToRoute('home');
+        return new RedirectResponse($this->router->generate('home'));
+    }
+
+    private function addFlash(string $type, string $message): void
+    {
+        $flashBag = $this->requestStack->getSession()->getBag('flashes');
+        if ($flashBag instanceof FlashBagInterface) {
+            $flashBag->add($type, $message);
+        }
     }
 }

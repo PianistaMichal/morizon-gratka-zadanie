@@ -21,6 +21,30 @@ Komenda `app:seed` (`src/Command/SeedDatabaseCommand.php`) została zastąpiona 
 php bin/console doctrine:fixtures:load
 ```
 
+### Refaktor: kompozycja zamiast dziedziczenia w kontrolerach + warstwa serwisów
+
+Wszystkie kontrolery usunęły `extends AbstractController` i przeszły na wstrzykiwanie zależności przez konstruktor.
+
+**Nowe serwisy (`src/Service/`):**
+- `AuthService` — walidacja tokenu i wyszukiwanie użytkownika przez Doctrine (zastępuje surowe SQL z `Connection`, eliminuje SQL injection z `AuthController`)
+- `HomeService` — pobieranie zdjęć z informacją o lajkach zalogowanego użytkownika
+- `PhotoLikeService` — logika toggle like/unlike (przeniesiona z `PhotoController`)
+- `ProfileService` — wyszukiwanie profilu użytkownika
+
+**Zmienione kontrolery (`src/Controller/`):**
+- `AuthController` — constructor injection: `AuthService`, `RouterInterface`, `RequestStack`
+- `HomeController` — constructor injection: `HomeService`, `Twig\Environment`
+- `PhotoController` — constructor injection: `PhotoLikeService`, `EntityManagerInterface`, `RouterInterface`, `RequestStack`
+- `ProfileController` — constructor injection: `ProfileService`, `RouterInterface`, `Twig\Environment`
+
+**Inne zmiany:**
+- Flash messages przez `$session->getBag('flashes')` (metoda na `SessionInterface`) zamiast `AbstractController::addFlash()`
+- Redirect przez `new RedirectResponse($router->generate(...))` zamiast `$this->redirectToRoute()`
+- Render przez `new Response($twig->render(...))` zamiast `$this->render()`
+- `NotFoundHttpException` rzucany bezpośrednio zamiast `$this->createNotFoundException()`
+- `config/services.yaml` — dodano alias `LikeRepositoryInterface → LikeRepository` dla autowiring `LikeService`
+- `HomeController` — zmieniono adnotację `@Route` (docblock) na atrybut `#[Route]`
+
 ## Sposób i stopień wykorzystania AI
 
 Do znalezienia i naprawy błędu użyłem Claude Code (claude-sonnet-4-6). AI przejrzało Dockerfiles obu serwisów, wykryło brakującą linię przez porównanie z działającym odpowiednikiem Phoenix, zaproponowało i zastosowało poprawkę, a następnie zweryfikowało ją przez pełne uruchomienie `docker-compose up -d` i przetestowanie wszystkich komend z sekcji "Szybki start" w README.

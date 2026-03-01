@@ -4,50 +4,58 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
-use Doctrine\DBAL\Connection;
-use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use App\Service\AuthService;
+use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\Session\Flash\FlashBagInterface;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Routing\RouterInterface;
 
-class AuthController extends AbstractController
+class AuthController
 {
-    #[Route('/auth/{username}/{token}', name: 'auth_login')]
-    public function login(string $username, string $token, Connection $connection, Request $request): Response
-    {
-        $sql = "SELECT * FROM auth_tokens WHERE token = '$token'";
-        $result = $connection->executeQuery($sql);
-        $tokenData = $result->fetchAssociative();
+    public function __construct(
+        private AuthService $authService,
+        private RouterInterface $router,
+        private RequestStack $requestStack,
+    ) {}
 
-        if (!$tokenData) {
+    #[Route('/auth/{username}/{token}', name: 'auth_login')]
+    public function login(string $username, string $token, Request $request): Response
+    {
+        if (!$this->authService->validateToken($token)) {
             return new Response('Invalid token', 401);
         }
 
-        $userSql = "SELECT * FROM users WHERE username = '$username'";
-        $userResult = $connection->executeQuery($userSql);
-        $userData = $userResult->fetchAssociative();
+        $user = $this->authService->findUserByUsername($username);
 
-        if (!$userData) {
+        if (!$user) {
             return new Response('User not found', 404);
         }
 
         $session = $request->getSession();
-        $session->set('user_id', $userData['id']);
+        $session->set('user_id', $user->getId());
         $session->set('username', $username);
-
         $this->addFlash('success', 'Welcome back, ' . $username . '!');
 
-        return $this->redirectToRoute('home');
+        return new RedirectResponse($this->router->generate('home'));
     }
 
     #[Route('/logout', name: 'logout')]
     public function logout(Request $request): Response
     {
-        $session = $request->getSession();
-        $session->clear();
-
+        $request->getSession()->clear();
         $this->addFlash('info', 'You have been logged out successfully.');
 
-        return $this->redirectToRoute('home');
+        return new RedirectResponse($this->router->generate('home'));
+    }
+
+    private function addFlash(string $type, string $message): void
+    {
+        $flashBag = $this->requestStack->getSession()->getBag('flashes');
+        if ($flashBag instanceof FlashBagInterface) {
+            $flashBag->add($type, $message);
+        }
     }
 }
