@@ -26,4 +26,9 @@ class SessionService
         $session->set(self::USER_ID, $userId);
         $session->set(self::USERNAME, $username);
     }
+
+    public function logout(): void
+    {
+        $this->requestStack->getSession()->clear();
+    }
 }

@@ -96,6 +96,25 @@ Wzorzec `$request->getSession()->get(SessionKey::USER_ID)` był powielony w `Hom
 - `ProfileController` — usunięto `SessionKey` import; dodano `SessionService`; `Request` pozostał (potrzebny do `$session->clear()`)
 - `AuthController` — usunięto `SessionKey` import i `Request` parametr z akcji `login()`; dodano `SessionService`; zapis sesji przez `$this->sessionService->login(...)`
 
+### Refaktor: custom exceptions w AuthService + try/catch w kontrolerze
+
+Logika walidacyjna przeniesiona z `AuthController` do `AuthService` z użyciem custom exceptions.
+
+**Nowe pliki:**
+- `src/Exception/InvalidTokenException.php` — `RuntimeException` rzucany gdy token nie istnieje w bazie; HTTP status code 401 w message code
+- `src/Exception/UserNotFoundException.php` — `RuntimeException` rzucany gdy username nie istnieje; przyjmuje `$username` do czytelnego komunikatu; HTTP 404
+
+**Zmiany w `AuthService`:**
+- Usunięto `validateToken()` i `findUserByUsername()`
+- Dodano `login(string $username, string $token): User` — wykonuje obie operacje, rzuca odpowiednie exceptions zamiast zwracać `bool`/`null`
+
+**Zmiany w `AuthController::login()`:**
+- Zastąpiono dwa bloki `if` jednym `try/catch`
+- `InvalidTokenException` → `Response(..., 401)`
+- `UserNotFoundException` → `Response(..., 404)`
+
+**Cel:** kontroler odpowiada tylko za mapowanie na HTTP response; logika biznesowa i warunki błędów należą do serwisu.
+
 ## Sposób i stopień wykorzystania AI
 
 Do znalezienia i naprawy błędu użyłem Claude Code (claude-sonnet-4-6). AI przejrzało Dockerfiles obu serwisów, wykryło brakującą linię przez porównanie z działającym odpowiednikiem Phoenix, zaproponowało i zastosowało poprawkę, a następnie zweryfikowało ją przez pełne uruchomienie `docker-compose up -d` i przetestowanie wszystkich komend z sekcji "Szybki start" w README.

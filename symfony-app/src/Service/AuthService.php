@@ -6,21 +6,33 @@ namespace App\Service;
 
 use App\Entity\AuthToken;
 use App\Entity\User;
+use App\Exception\InvalidTokenException;
+use App\Exception\UserNotFoundException;
 use Doctrine\ORM\EntityManagerInterface;
 
 class AuthService
 {
     public function __construct(
         private EntityManagerInterface $em,
+        private SessionService $sessionService,
     ) {}
 
-    public function validateToken(string $token): bool
+    /**
+     * @throws InvalidTokenException
+     * @throws UserNotFoundException
+     */
+    public function login(string $username, string $token): void
     {
-        return $this->em->getRepository(AuthToken::class)->findOneBy(['token' => $token]) !== null;
-    }
+        if ($this->em->getRepository(AuthToken::class)->findOneBy(['token' => $token]) === null) {
+            throw new InvalidTokenException();
+        }
 
-    public function findUserByUsername(string $username): ?User
-    {
-        return $this->em->getRepository(User::class)->findOneBy(['username' => $username]);
+        $user = $this->em->getRepository(User::class)->findOneBy(['username' => $username]);
+
+        if ($user === null) {
+            throw new UserNotFoundException($username);
+        }
+
+        $this->sessionService->login($user->getId(), $username);
     }
 }
