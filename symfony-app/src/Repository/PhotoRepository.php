@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace App\Repository;
 
 use App\Entity\Photo;
+use DateTimeImmutable;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
+use Exception;
 
 /**
  * @extends ServiceEntityRepository<Photo>
@@ -60,13 +62,13 @@ class PhotoRepository extends ServiceEntityRepository
 
         if (!empty($filters['taken_at'])) {
             try {
-                $date = new \DateTimeImmutable($filters['taken_at']);
+                $date = new DateTimeImmutable($filters['taken_at']);
                 $nextDay = $date->modify('+1 day');
                 $qb->andWhere('p.takenAt >= :takenAtStart')
                     ->andWhere('p.takenAt < :takenAtEnd')
                     ->setParameter('takenAtStart', $date)
                     ->setParameter('takenAtEnd', $nextDay);
-            } catch (\Exception) {
+            } catch (Exception) {
                 // invalid date, ignore filter
             }
         }

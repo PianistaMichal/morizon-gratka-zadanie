@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\Exception;
 
-class InvalidTokenException extends \RuntimeException
+use RuntimeException;
+
+class InvalidTokenException extends RuntimeException
 {
     public function __construct()
     {

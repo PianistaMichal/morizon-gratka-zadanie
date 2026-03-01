@@ -59,8 +59,14 @@ services:
     ports:
       - "8000:8000"
     volumes:
-      - ./symfony-app:/app
+      - ./symfony-app:/app:cached
+      - symfony-vendor:/app/vendor
+      - symfony-var:/app/var
+      - symfony-composer-cache:/root/.composer/cache
 
 volumes:
   phoenix-db-data:
   symfony-db-data:
+  symfony-vendor:
+  symfony-var:
+  symfony-composer-cache:

@@ -271,6 +271,36 @@ Dodano narzędzia do statycznej analizy i formatowania kodu z profesjonalną kon
 
 **Uwaga:** po `composer update` wewnątrz kontenera cache Symfony (`var/cache/dev/`) musi istnieć, by PHPStan mógł analizować kontener (wymaga wcześniejszego `bin/console cache:warmup --env=dev`).
 
+### Refaktor: zmiana reguł PHP CS Fixer (native_function_invocation + global_namespace_import)
+
+**Zmiany w `.php-cs-fixer.php`:**
+- Usunięto regułę `native_function_invocation` — nie ma już wymogu pisania `\count()` zamiast `count()`
+- Zmieniono `global_namespace_import.import_classes` z `false` na `true` — wymusza `use Exception;` i `use Throwable;` zamiast `\Exception` i `\Throwable` inline
+
+**Cel:** czytelniejszy kod bez backslashy przy globalnych klasach; standardowy styl `count()` bez prefiksu.
+
+### Fix: zmiana `composer update` na `composer install` w entrypoint.sh
+
+`entrypoint.sh` wywoływał `composer update`, który przy każdym starcie kontenera rozwiązywał zależności od nowa (wolne). Zamieniono na `composer install`, który instaluje dokładne wersje z `composer.lock` — znacznie szybciej.
+
+**Zmieniony plik:** `symfony-app/entrypoint.sh`
+
+### Fix: przeniesienie `vendor/` do named volume (Docker bind mount issue na Windows)
+
+Bind mount `./symfony-app:/app:cached` powodował, że `composer install` zapisywał tysiące plików przez most Windows↔Linux (Docker Desktop + WSL2) — bardzo wolne. Rozwiązanie: dodanie named volume `symfony-vendor` dla `/app/vendor/` i `symfony-composer-cache` dla cache composera, które żyją wyłącznie w filesystemie Linuksa wewnątrz Dockera.
+
+**Zmieniony plik:** `docker-compose.yml`
+
+### Fix: przeniesienie `var/` do named volume (wolny cache:clear na Windows)
+
+`cache:clear` (i każde odświeżenie cache przez Symfony) operuje na tysiącach małych plików w `var/cache/`. Katalog ten leżał w bind-mountowanym `./symfony-app:/app:cached` — każda operacja plikowa przechodziła przez most Windows↔Linux (Docker Desktop + WSL2), co było bardzo wolne.
+
+Rozwiązanie: dodanie named volume `symfony-var` dla `/app/var/`, analogicznie jak wcześniej zrobiono dla `vendor/`. Cały katalog `var/` (cache, logi, sessions) żyje teraz wyłącznie w filesystemie Linuksa wewnątrz Dockera.
+
+**Zmieniony plik:** `docker-compose.yml`
+
+---
+
 ### Zadanie 4: Rate-limiting w PhoenixApi (OTP GenServer)
 
 Zaimplementowano rate-limiting na endpoincie `GET /api/photos` z użyciem OTP GenServer (sliding-window algorithm).

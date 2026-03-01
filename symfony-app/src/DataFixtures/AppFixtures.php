@@ -7,6 +7,7 @@ namespace App\DataFixtures;
 use App\Entity\AuthToken;
 use App\Entity\Photo;
 use App\Entity\User;
+use DateTimeImmutable;
 use Doctrine\Bundle\FixturesBundle\Fixture;
 use Doctrine\Persistence\ObjectManager;
 
@@ -187,7 +188,7 @@ class AppFixtures extends Fixture
                 ->setLocation($photoData['location'])
                 ->setDescription($photoData['description'])
                 ->setCamera($photoData['camera'])
-                ->setTakenAt(new \DateTimeImmutable($photoData['takenAt']))
+                ->setTakenAt(new DateTimeImmutable($photoData['takenAt']))
                 ->setUser($users[$photoData['userIndex']]);
 
             $manager->persist($photo);

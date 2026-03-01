@@ -27,7 +27,7 @@ return (new PhpCsFixer\Config())
         // Imports
         'ordered_imports' => ['sort_algorithm' => 'alpha', 'imports_order' => ['class', 'function', 'const']],
         'no_unused_imports' => true,
-        'global_namespace_import' => ['import_classes' => false, 'import_constants' => false, 'import_functions' => false],
+        'global_namespace_import' => ['import_classes' => true, 'import_constants' => false, 'import_functions' => false],
 
         // Arrays
         'array_syntax' => ['syntax' => 'short'],
@@ -73,7 +73,7 @@ return (new PhpCsFixer\Config())
         'no_superfluous_phpdoc_tags' => ['allow_mixed' => true, 'remove_inheritdoc' => false],
 
         // Misc
-        'native_function_invocation' => ['include' => ['@compiler_optimized'], 'scope' => 'namespaced'],
+        'native_function_invocation' => false,
         'no_useless_else' => true,
         'no_useless_return' => true,
         'return_assignment' => false,

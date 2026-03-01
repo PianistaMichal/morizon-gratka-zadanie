@@ -35,7 +35,7 @@ class AuthService
         }
 
         $userId = $user->getId();
-        \assert($userId !== null, 'User fetched from DB must have an ID.');
+        assert($userId !== null, 'User fetched from DB must have an ID.');
         $this->sessionService->login($userId, $username);
     }
 }

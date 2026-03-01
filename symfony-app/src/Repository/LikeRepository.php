@@ -9,6 +9,8 @@ use App\Entity\Photo;
 use App\Entity\User;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
+use LogicException;
+use Override;
 
 /**
  * @extends ServiceEntityRepository<Like>
@@ -27,7 +29,7 @@ class LikeRepository extends ServiceEntityRepository implements LikeRepositoryIn
         $this->user = $user;
     }
 
-    #[\Override]
+    #[Override]
     public function unlikePhoto(Photo $photo): void
     {
         $em = $this->getEntityManager();
@@ -54,7 +56,7 @@ class LikeRepository extends ServiceEntityRepository implements LikeRepositoryIn
         }
     }
 
-    #[\Override]
+    #[Override]
     public function hasUserLikedPhoto(Photo $photo): bool
     {
         $likes = $this->createQueryBuilder('l')
@@ -66,14 +68,14 @@ class LikeRepository extends ServiceEntityRepository implements LikeRepositoryIn
             ->getQuery()
             ->getArrayResult();
 
-        return \count($likes) > 0;
+        return count($likes) > 0;
     }
 
-    #[\Override]
+    #[Override]
     public function createLike(Photo $photo): Like
     {
         if ($this->user === null) {
-            throw new \LogicException('User must be set via setUser() before calling createLike().');
+            throw new LogicException('User must be set via setUser() before calling createLike().');
         }
 
         $like = new Like();
@@ -87,7 +89,7 @@ class LikeRepository extends ServiceEntityRepository implements LikeRepositoryIn
         return $like;
     }
 
-    #[\Override]
+    #[Override]
     public function updatePhotoCounter(Photo $photo, int $increment): void
     {
         $em = $this->getEntityManager();

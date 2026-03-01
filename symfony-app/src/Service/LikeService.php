@@ -6,6 +6,8 @@ namespace App\Service;
 
 use App\Entity\Photo;
 use App\Repository\LikeRepositoryInterface;
+use Exception;
+use Throwable;
 
 class LikeService
 {
@@ -19,8 +21,8 @@ class LikeService
         try {
             $this->likeRepository->createLike($photo);
             $this->likeRepository->updatePhotoCounter($photo, 1);
-        } catch (\Throwable $e) {
-            throw new \Exception('Something went wrong while liking the photo');
+        } catch (Throwable $e) {
+            throw new Exception('Something went wrong while liking the photo');
         }
     }
 }

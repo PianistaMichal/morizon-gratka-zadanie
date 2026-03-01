@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\Exception;
 
-class InvalidPhoenixTokenException extends \RuntimeException
+use RuntimeException;
+
+class InvalidPhoenixTokenException extends RuntimeException
 {
     public function __construct()
     {

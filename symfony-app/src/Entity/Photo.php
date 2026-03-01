@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Entity;
 
 use App\Repository\PhotoRepository;
+use DateTimeImmutable;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: PhotoRepository::class)]
@@ -29,7 +30,7 @@ class Photo
     private ?string $camera = null;
 
     #[ORM\Column(type: 'datetime_immutable', nullable: true)]
-    private ?\DateTimeImmutable $takenAt = null;
+    private ?DateTimeImmutable $takenAt = null;
 
     #[ORM\Column(type: 'integer', options: ['default' => 0])]
     private int $likeCounter = 0;
@@ -91,12 +92,12 @@ class Photo
         return $this;
     }
 
-    public function getTakenAt(): ?\DateTimeImmutable
+    public function getTakenAt(): ?DateTimeImmutable
     {
         return $this->takenAt;
     }
 
-    public function setTakenAt(?\DateTimeImmutable $takenAt): self
+    public function setTakenAt(?DateTimeImmutable $takenAt): self
     {
         $this->takenAt = $takenAt;
 

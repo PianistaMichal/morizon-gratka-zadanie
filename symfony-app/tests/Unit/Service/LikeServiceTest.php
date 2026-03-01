@@ -7,8 +7,10 @@ namespace App\Tests\Unit\Service;
 use App\Entity\Photo;
 use App\Repository\LikeRepositoryInterface;
 use App\Service\LikeService;
+use Exception;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
+use RuntimeException;
 
 class LikeServiceTest extends TestCase
 {
@@ -42,9 +44,9 @@ class LikeServiceTest extends TestCase
         $photo = $this->createMock(Photo::class);
 
         $this->likeRepository->method('createLike')
-            ->willThrowException(new \RuntimeException('DB error'));
+            ->willThrowException(new RuntimeException('DB error'));
 
-        $this->expectException(\Exception::class);
+        $this->expectException(Exception::class);
         $this->expectExceptionMessage('Something went wrong while liking the photo');
 
         $this->likeService->execute($photo);
