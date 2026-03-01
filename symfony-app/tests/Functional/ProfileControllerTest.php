@@ -101,7 +101,7 @@ class ProfileControllerTest extends AbstractWebTestCase
 
     public function testImportWithNoTokenShowsError(): void
     {
-        $this->loginAs('demo');
+        $this->loginAs('nature_lover');
 
         $this->client->request('POST', '/profile/import');
         $this->client->followRedirect();

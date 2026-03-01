@@ -24,16 +24,40 @@ class LikeRepository extends ServiceEntityRepository implements LikeRepositoryIn
     #[Override]
     public function hasUserLikedPhoto(User $user, Photo $photo): bool
     {
-        $likes = $this->createQueryBuilder('l')
-            ->select('l.id')
+        return (bool) $this->createQueryBuilder('l')
+            ->select('COUNT(l.id)')
             ->where('l.user = :user')
             ->andWhere('l.photo = :photo')
             ->setParameter('user', $user)
             ->setParameter('photo', $photo)
             ->getQuery()
-            ->getArrayResult();
+            ->getSingleScalarResult();
+    }
 
-        return count($likes) > 0;
+    #[Override]
+    public function getUserLikesForPhotoIds(User $user, array $photoIds): array
+    {
+        if (empty($photoIds)) {
+            return [];
+        }
+
+        $rows = $this->createQueryBuilder('l')
+            ->select('IDENTITY(l.photo) as photoId')
+            ->where('l.user = :user')
+            ->andWhere('l.photo IN (:photoIds)')
+            ->setParameter('user', $user)
+            ->setParameter('photoIds', $photoIds)
+            ->getQuery()
+            ->getScalarResult();
+
+        $likedSet = array_flip(array_column($rows, 'photoId'));
+
+        $result = [];
+        foreach ($photoIds as $id) {
+            $result[$id] = isset($likedSet[$id]);
+        }
+
+        return $result;
     }
 
     #[Override]

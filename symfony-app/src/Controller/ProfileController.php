@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Entity\User;
 use App\Enum\FlashType;
 use App\Exception\InvalidPhoenixTokenException;
 use App\Form\PhoenixTokenType;
@@ -35,19 +36,11 @@ class ProfileController
     #[Route('/profile', name: 'profile')]
     public function profile(Request $request): Response
     {
-        $userId = $this->sessionService->getUserId();
-
-        if ($userId === null) {
-            return new RedirectResponse($this->router->generate('home'));
+        $userOrRedirect = $this->requireAuthenticatedUser($request);
+        if ($userOrRedirect instanceof RedirectResponse) {
+            return $userOrRedirect;
         }
-
-        $user = $this->profileService->findUser($userId);
-
-        if ($user === null) {
-            $request->getSession()->clear();
-
-            return new RedirectResponse($this->router->generate('home'));
-        }
+        $user = $userOrRedirect;
 
         $tokenForm = $this->formFactory->create(PhoenixTokenType::class, [
             'phoenix_token' => $user->getPhoenixToken(),
@@ -62,19 +55,11 @@ class ProfileController
     #[Route('/profile/token', name: 'profile_save_token', methods: ['POST'])]
     public function saveToken(Request $request): Response
     {
-        $userId = $this->sessionService->getUserId();
-
-        if ($userId === null) {
-            return new RedirectResponse($this->router->generate('home'));
+        $userOrRedirect = $this->requireAuthenticatedUser($request);
+        if ($userOrRedirect instanceof RedirectResponse) {
+            return $userOrRedirect;
         }
-
-        $user = $this->profileService->findUser($userId);
-
-        if ($user === null) {
-            $request->getSession()->clear();
-
-            return new RedirectResponse($this->router->generate('home'));
-        }
+        $user = $userOrRedirect;
 
         $form = $this->formFactory->create(PhoenixTokenType::class);
         $form->handleRequest($request);
@@ -94,19 +79,11 @@ class ProfileController
     #[Route('/profile/import', name: 'profile_import', methods: ['POST'])]
     public function import(Request $request): Response
     {
-        $userId = $this->sessionService->getUserId();
-
-        if ($userId === null) {
-            return new RedirectResponse($this->router->generate('home'));
+        $userOrRedirect = $this->requireAuthenticatedUser($request);
+        if ($userOrRedirect instanceof RedirectResponse) {
+            return $userOrRedirect;
         }
-
-        $user = $this->profileService->findUser($userId);
-
-        if ($user === null) {
-            $request->getSession()->clear();
-
-            return new RedirectResponse($this->router->generate('home'));
-        }
+        $user = $userOrRedirect;
 
         if ($user->getPhoenixToken() === null) {
             $this->flashService->add(FlashType::ERROR, 'Najpierw zapisz token dostępu do PhoenixApi.');
@@ -122,5 +99,24 @@ class ProfileController
         }
 
         return new RedirectResponse($this->router->generate('profile'));
+    }
+
+    private function requireAuthenticatedUser(Request $request): User|RedirectResponse
+    {
+        $userId = $this->sessionService->getUserId();
+
+        if ($userId === null) {
+            return new RedirectResponse($this->router->generate('home'));
+        }
+
+        $user = $this->profileService->findUser($userId);
+
+        if ($user === null) {
+            $request->getSession()->clear();
+
+            return new RedirectResponse($this->router->generate('home'));
+        }
+
+        return $user;
     }
 }

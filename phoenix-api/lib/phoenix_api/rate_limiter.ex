@@ -30,7 +30,15 @@ defmodule PhoenixApi.RateLimiter do
 
   @doc """
   Checks whether the given user is within rate limits and, if so, records
-  the request. Returns `:ok` or `{:error, :user_limit | :global_limit}`.
+  the request.
+
+  Returns:
+    - `:ok` when the request is allowed
+    - `{:error, :user_limit, remaining_ms}` when the per-user limit is exceeded
+    - `{:error, :global_limit, remaining_ms}` when the global limit is exceeded
+
+  `remaining_ms` indicates how long until the window rolls over enough to allow
+  another request — use it to populate the `Retry-After` response header.
 
   The optional `server` argument allows targeting a specific named process
   (useful in tests).
@@ -70,18 +78,23 @@ defmodule PhoenixApi.RateLimiter do
     global = Enum.filter(state.global_requests, &(&1 > global_cutoff))
 
     if length(global) >= cfg.global_limit do
-      {:reply, {:error, :global_limit}, %{state | global_requests: global}}
+      oldest = Enum.min(global)
+      remaining_ms = oldest + cfg.global_window_ms - now
+      {:reply, {:error, :global_limit, remaining_ms}, %{state | global_requests: global}}
     else
       user_cutoff = now - cfg.user_window_ms
       user = state.user_requests |> Map.get(user_id, []) |> Enum.filter(&(&1 > user_cutoff))
 
       if length(user) >= cfg.user_limit do
+        oldest = Enum.min(user)
+        remaining_ms = oldest + cfg.user_window_ms - now
+
         new_state = %{state |
           global_requests: global,
           user_requests: Map.put(state.user_requests, user_id, user)
         }
 
-        {:reply, {:error, :user_limit}, new_state}
+        {:reply, {:error, :user_limit, remaining_ms}, new_state}
       else
         new_state = %{state |
           global_requests: [now | global],

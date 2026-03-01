@@ -4,6 +4,10 @@ defmodule PhoenixApiWeb.Plugs.RateLimit do
 
   Must be placed after `PhoenixApiWeb.Plugs.Authenticate` so that
   `conn.assigns.current_user` is already populated.
+
+  On limit exceeded, responds with HTTP 429 and a `Retry-After` header
+  indicating how many seconds the client should wait before retrying
+  (RFC 6585).
   """
   import Plug.Conn
   import Phoenix.Controller
@@ -17,19 +21,30 @@ defmodule PhoenixApiWeb.Plugs.RateLimit do
       :ok ->
         conn
 
-      {:error, :user_limit} ->
+      {:error, :user_limit, remaining_ms} ->
         conn
+        |> put_resp_header("retry-after", retry_after_seconds(remaining_ms))
         |> put_status(:too_many_requests)
         |> put_view(json: PhoenixApiWeb.ErrorJSON)
         |> render(:"429")
         |> halt()
 
-      {:error, :global_limit} ->
+      {:error, :global_limit, remaining_ms} ->
         conn
+        |> put_resp_header("retry-after", retry_after_seconds(remaining_ms))
         |> put_status(:too_many_requests)
         |> put_view(json: PhoenixApiWeb.ErrorJSON)
         |> render(:"429")
         |> halt()
     end
+  end
+
+  # Converts milliseconds to a ceiling of whole seconds, as required by RFC 6585.
+  defp retry_after_seconds(remaining_ms) do
+    remaining_ms
+    |> Kernel./(1000)
+    |> :math.ceil()
+    |> trunc()
+    |> to_string()
   end
 end

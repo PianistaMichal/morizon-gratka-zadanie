@@ -6,15 +6,17 @@ namespace App\Service;
 
 use App\Entity\Photo;
 use App\Entity\User;
-use App\Repository\LikeRepository;
+use App\Repository\LikeRepositoryInterface;
 use App\Repository\PhotoRepository;
 use Doctrine\ORM\EntityManagerInterface;
 
 class HomeService
 {
+    private const PER_PAGE = 12;
+
     public function __construct(
         private PhotoRepository $photoRepository,
-        private LikeRepository $likeRepository,
+        private LikeRepositoryInterface $likeRepository,
         private EntityManagerInterface $em,
     ) {
     }
@@ -22,11 +24,12 @@ class HomeService
     /**
      * @param array<string, string> $filters
      *
-     * @return array{photos: Photo[], currentUser: User|null, userLikes: array<int, bool>}
+     * @return array{photos: Photo[], currentUser: User|null, userLikes: array<int, bool>, currentPage: int, totalPages: int}
      */
-    public function getPhotosData(?int $userId, array $filters = []): array
+    public function getPhotosData(?int $userId, array $filters = [], int $page = 1): array
     {
-        $photos = $this->photoRepository->findAllWithUsersFiltered($filters);
+        $photos = $this->photoRepository->findAllWithUsersFiltered($filters, $page, self::PER_PAGE);
+        $total = $this->photoRepository->countFiltered($filters);
         $currentUser = null;
         $userLikes = [];
 
@@ -34,9 +37,8 @@ class HomeService
             $currentUser = $this->em->getRepository(User::class)->find($userId);
 
             if ($currentUser) {
-                foreach ($photos as $photo) {
-                    $userLikes[(int) $photo->getId()] = $this->likeRepository->hasUserLikedPhoto($currentUser, $photo);
-                }
+                $photoIds = array_map(static fn (Photo $p) => (int) $p->getId(), $photos);
+                $userLikes = $this->likeRepository->getUserLikesForPhotoIds($currentUser, $photoIds);
             }
         }
 
@@ -44,6 +46,8 @@ class HomeService
             'photos' => $photos,
             'currentUser' => $currentUser,
             'userLikes' => $userLikes,
+            'currentPage' => $page,
+            'totalPages' => (int) ceil($total / self::PER_PAGE),
         ];
     }
 }

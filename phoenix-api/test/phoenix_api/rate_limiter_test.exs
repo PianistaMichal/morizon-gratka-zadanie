@@ -28,26 +28,41 @@ defmodule PhoenixApi.RateLimiterTest do
     test "blocks the request that exceeds the limit", %{limiter: limiter} do
       for _ <- 1..3, do: PhoenixApi.RateLimiter.check_and_record(:user_a, limiter)
 
-      assert PhoenixApi.RateLimiter.check_and_record(:user_a, limiter) == {:error, :user_limit}
+      assert {:error, :user_limit, remaining} =
+               PhoenixApi.RateLimiter.check_and_record(:user_a, limiter)
+
+      assert remaining > 0
     end
 
     test "users are tracked independently", %{limiter: limiter} do
       for _ <- 1..3, do: PhoenixApi.RateLimiter.check_and_record(:user_a, limiter)
 
       # user_a is blocked …
-      assert PhoenixApi.RateLimiter.check_and_record(:user_a, limiter) == {:error, :user_limit}
+      assert {:error, :user_limit, _remaining} =
+               PhoenixApi.RateLimiter.check_and_record(:user_a, limiter)
+
       # … but user_b is still fine
       assert PhoenixApi.RateLimiter.check_and_record(:user_b, limiter) == :ok
     end
 
     test "allows requests again after the window expires", %{limiter: limiter} do
       for _ <- 1..3, do: PhoenixApi.RateLimiter.check_and_record(:user_a, limiter)
-      assert PhoenixApi.RateLimiter.check_and_record(:user_a, limiter) == {:error, :user_limit}
+      assert {:error, :user_limit, _} = PhoenixApi.RateLimiter.check_and_record(:user_a, limiter)
 
       # user_window_ms = 500 ms — wait for the window to roll over
       Process.sleep(600)
 
       assert PhoenixApi.RateLimiter.check_and_record(:user_a, limiter) == :ok
+    end
+
+    test "remaining_ms decreases towards zero as window expires", %{limiter: limiter} do
+      for _ <- 1..3, do: PhoenixApi.RateLimiter.check_and_record(:user_a, limiter)
+
+      {:error, :user_limit, remaining1} = PhoenixApi.RateLimiter.check_and_record(:user_a, limiter)
+      Process.sleep(100)
+      {:error, :user_limit, remaining2} = PhoenixApi.RateLimiter.check_and_record(:user_a, limiter)
+
+      assert remaining1 > remaining2
     end
   end
 
@@ -61,12 +76,15 @@ defmodule PhoenixApi.RateLimiterTest do
       assert PhoenixApi.RateLimiter.check_and_record(:u5, limiter) == :ok
 
       # 6th request — any user — should be rejected due to global limit
-      assert PhoenixApi.RateLimiter.check_and_record(:u6, limiter) == {:error, :global_limit}
+      assert {:error, :global_limit, remaining} =
+               PhoenixApi.RateLimiter.check_and_record(:u6, limiter)
+
+      assert remaining > 0
     end
 
     test "allows requests again after the global window expires", %{limiter: limiter} do
       for i <- 1..5, do: PhoenixApi.RateLimiter.check_and_record(i, limiter)
-      assert PhoenixApi.RateLimiter.check_and_record(:overflow, limiter) == {:error, :global_limit}
+      assert {:error, :global_limit, _} = PhoenixApi.RateLimiter.check_and_record(:overflow, limiter)
 
       # global_window_ms = 1_000 ms
       Process.sleep(1_100)
@@ -79,8 +97,8 @@ defmodule PhoenixApi.RateLimiterTest do
       for i <- 1..5, do: PhoenixApi.RateLimiter.check_and_record(i, limiter)
 
       # Even a brand-new user (0 prior requests) should be rejected
-      assert PhoenixApi.RateLimiter.check_and_record(:brand_new_user, limiter) ==
-               {:error, :global_limit}
+      assert {:error, :global_limit, _remaining} =
+               PhoenixApi.RateLimiter.check_and_record(:brand_new_user, limiter)
     end
   end
 end

@@ -24,6 +24,7 @@ class AppFixtures extends Fixture
                 'age' => 25,
                 'bio' => 'Demo account for testing purposes.',
                 'token' => 'demo1234567890abcdef1234567890abcdef1234567890abcdef1234567890ab',
+                'phoenixToken' => 'test_token_user1_abc123',
             ],
             [
                 'username' => 'nature_lover',
@@ -67,7 +68,8 @@ class AppFixtures extends Fixture
                 ->setName($userData['name'])
                 ->setLastName($userData['lastName'])
                 ->setAge($userData['age'])
-                ->setBio($userData['bio']);
+                ->setBio($userData['bio'])
+                ->setPhoenixToken($userData['phoenixToken'] ?? null);
 
             $manager->persist($user);
             $users[] = $user;

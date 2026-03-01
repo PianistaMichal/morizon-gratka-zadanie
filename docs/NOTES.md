@@ -454,3 +454,106 @@ Zaimplementowano rate-limiting na endpoincie `GET /api/photos` z użyciem OTP Ge
 docker compose exec -e DB_HOST=phoenix-db phoenix sh -c "MIX_ENV=test mix test"
 ```
 
+---
+
+## Fix: testy i PHPStan (2026-03-01)
+
+### Fix: `PhotoRepository::countFiltered` — usunięcie ORDER BY z zapytania COUNT
+
+`buildFilteredQuery()` zawierał `->orderBy('p.id', 'ASC')`. Gdy `countFiltered()` nadpisywało SELECT na `COUNT(p.id)`, PostgreSQL odrzucał zapytanie błędem: *column "p0_.id" must appear in the GROUP BY clause* — bo `ORDER BY p.id` bez GROUP BY jest niedozwolone przy agregacie.
+
+**Fix:** dodano `->resetDQLPart('orderBy')` w `countFiltered()` przed `->getQuery()`.
+
+**Skutek:** naprawia też wszystkie testy korzystające z `GET /` (HomeController, AuthController, PhotoController) — każde z nich wywołuje `HomeService::getPhotosData()` → `countFiltered()`.
+
+### Fix: `ProfileControllerTest::testImportWithNoTokenShowsError` — zły użytkownik
+
+Test sprawdzał zachowanie gdy user NIE MA tokenu Phoenix, ale używał `demo`, który MA `phoenixToken` ustawiony w fixtures (`test_token_user1_abc123`). Kontroler nie wyświetlał "Najpierw zapisz token", bo token istniał.
+
+**Fix:** zmieniono `loginAs('demo')` → `loginAs('nature_lover')` — ten user nie ma tokenu Phoenix w fixtures.
+
+### Fix: PHPStan — `HomeController` i `PhotoRepositoryTest`
+
+- `HomeController.php:36` — `->get('page', 1)` — drugi parametr `InputBag::get()` musi być `string|null`; zmieniono domyślną wartość `1` → `'1'`
+- `PhotoRepositoryTest.php:37` — `getLocation()` zwraca `string|null`; dodano `assertNotNull()` przed `assertStringContainsString()`
+
+---
+
+## Poprawki uzupełniające (2026-03-01)
+
+### Fix: N+1 query w HomeService — batch query dla lajków
+
+`HomeService::getPhotosData()` wykonywało jedno zapytanie SQL na każde zdjęcie (`hasUserLikedPhoto`) — przy N zdjęciach = N+1 zapytań łącznie.
+
+**Zmiana:**
+- `LikeRepositoryInterface` + `LikeRepository` — nowa metoda `getUserLikesForPhotoIds(User $user, array $photoIds): array<int, bool>`, która pobiera wszystkie polubienia użytkownika dla listy zdjęć jednym zapytaniem (`WHERE l.photo IN (:photoIds)`)
+- `LikeRepository::hasUserLikedPhoto()` — zoptymalizowane: zamiast fetchowania `l.id` i `count()` używa teraz `COUNT(l.id)` + `getSingleScalarResult()`
+- `HomeService` — zastąpiono pętlę wywołań `hasUserLikedPhoto` jednym wywołaniem `getUserLikesForPhotoIds`; zmieniono typ zależności z `LikeRepository` (klasa konkretna) na `LikeRepositoryInterface`
+- `HomeServiceTest` — zaktualizowano mock do nowej metody batch; dodano test dla metadanych paginacji
+
+### Refaktor: wydzielenie auth-guard w ProfileController
+
+Wzorzec `getUserId() → null? → redirect; findUser() → null? → clear + redirect` był identycznie powielony w 3 metodach kontrolera.
+
+**Zmiana:**
+- Wydzielono prywatną metodę `requireAuthenticatedUser(Request): User|RedirectResponse`
+- Każda z 3 metod (`profile`, `saveToken`, `import`) teraz wywołuje ją i sprawdza typ zwróconej wartości
+
+### Dodanie paginacji na stronie głównej
+
+`findAllWithUsersFiltered()` robiło `SELECT *` bez `LIMIT` — problem skalowalności przy dużej liczbie zdjęć.
+
+**Zmiana:**
+- `PhotoRepository::findAllWithUsersFiltered()` — dodano `int $page = 1, int $perPage = 12`, używa `setFirstResult/setMaxResults`; wydzielono prywatną metodę `buildFilteredQuery()` eliminując duplikację klauzul WHERE między `findAllWithUsersFiltered` i nowym `countFiltered`
+- `PhotoRepository::countFiltered()` — nowa metoda zliczająca wyniki z tymi samymi filtrami
+- `HomeService::getPhotosData()` — dodano `int $page = 1`, zwraca `currentPage` i `totalPages`
+- `HomeController` — czyta `?page=` z query string (`max(1, ...)` dla ochrony przed ujemnymi wartościami)
+- `templates/home/index.html.twig` — nawigacja Poprzednia/Następna zachowująca aktywne filtry
+
+### Fix: walidacja struktury odpowiedzi PhoenixClient
+
+`$response->toArray()['photos'] ?? []` cicho zwracało pustą tablicę gdy API zmieniło kontrakt — błąd był niewidoczny.
+
+**Zmiana:**
+- Zamiast `?? []` sprawdzamy `array_key_exists('photos', $data) && is_array($data['photos'])` i rzucamy `\RuntimeException` przy niezgodności struktury
+
+### Fix: timezone UTC w filtrze taken_at (PhotoRepository)
+
+`new DateTimeImmutable($filters['taken_at'])` bez podanej strefy czasowej używało strefy serwera, co mogło powodować off-by-one przy filtrze daty.
+
+**Zmiana:** `new DateTimeImmutable($filters['taken_at'], new DateTimeZone('UTC'))`
+
+### Fix: spójność tokenów Phoenix w fixture Symfony
+
+Demo user w `AppFixtures` nie miał ustawionego `phoenixToken` — integracja importu nie działała od razu po uruchomieniu projektu.
+
+**Zmiana:** dodano `phoenixToken: 'test_token_user1_abc123'` do danych demo usera (wartość zgodna z `phoenix-api/priv/repo/seeds.exs`)
+
+### Dodanie testów filtrowania PhotoRepository
+
+Nowy plik: `tests/Functional/PhotoRepositoryTest.php` — 9 testów pokrywających filtrowanie i paginację:
+- Filtrowanie po `location`, `camera` (case-insensitive), `username`, `taken_at`
+- Ignorowanie błędnego formatu daty
+- Paginacja (dwie strony po 6, brak powtórzeń)
+- `countFiltered` z i bez filtrów
+
+### Phoenix: Retry-After header przy rate limitingu (RFC 6585)
+
+HTTP 429 bez `Retry-After` headera to niepełna implementacja RFC — klient nie wie kiedy ponowić żądanie.
+
+**Zmiana:**
+- `RateLimiter::check_and_record/2` — przy przekroczeniu limitu zwraca teraz `{:error, :user_limit | :global_limit, remaining_ms}` gdzie `remaining_ms` to czas do wygaśnięcia najstarszego żądania w oknie
+- `RateLimit` Plug — odczytuje `remaining_ms` i ustawia `Retry-After: <sekundy>` (ceiling z ms → s)
+- Testy zaktualizowane: asercje pattern match `{:error, :user_limit, remaining}` zamiast == porównania; nowy test integration sprawdzający nagłówek `Retry-After`
+
+### Architektura: GenServer vs ETS — uzasadnienie wyboru
+
+`RateLimiter` używa pojedynczego procesu GenServer zamiast ETS z atomic operations. **Trade-off:**
+
+- **GenServer**: proste w implementacji, brak race conditions (jednowątkowy model aktora), łatwy do testowania z izolowanymi instancjami. **Wada**: przy dużym ruchu (`check_and_record` synchroniczne) mailbox rośnie → latency → timeout.
+- **ETS `:public` + `update_counter`**: współbieżne odczyty/zapisy bez serialization, brak bottlenecku procesu. **Wada**: trudniejsza implementacja sliding-window (ETS nie ma TTL), wymaga osobnego cleaner procesu lub persistent ETS dla przeżycia restartu.
+
+**Decyzja**: GenServer jest właściwy dla tego use case — import zdjęć to rzadka operacja (max 5 × liczba userów na 10 min), ruch nie uzasadnia złożoności ETS. W systemie produkcyjnym z dużym ruchem użyłbym ETS lub Redis (Redix).
+
+**State loss przy restarcie**: supervisor restartuje GenServer po awarii, ale timestamps są tracone — limity się zerują. Akceptowalne dla rate limitingu importu; produkcyjnie: ETS `:public` (poza GenServerem) lub Redis.
+

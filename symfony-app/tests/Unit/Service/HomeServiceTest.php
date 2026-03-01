@@ -6,7 +6,7 @@ namespace App\Tests\Unit\Service;
 
 use App\Entity\Photo;
 use App\Entity\User;
-use App\Repository\LikeRepository;
+use App\Repository\LikeRepositoryInterface;
 use App\Repository\PhotoRepository;
 use App\Service\HomeService;
 use Doctrine\ORM\EntityManagerInterface;
@@ -18,7 +18,7 @@ class HomeServiceTest extends TestCase
 {
     private PhotoRepository&MockObject $photoRepository;
 
-    private LikeRepository&MockObject $likeRepository;
+    private LikeRepositoryInterface&MockObject $likeRepository;
 
     private EntityManagerInterface&MockObject $em;
 
@@ -27,7 +27,7 @@ class HomeServiceTest extends TestCase
     protected function setUp(): void
     {
         $this->photoRepository = $this->createMock(PhotoRepository::class);
-        $this->likeRepository = $this->createMock(LikeRepository::class);
+        $this->likeRepository = $this->createMock(LikeRepositoryInterface::class);
         $this->em = $this->createMock(EntityManagerInterface::class);
 
         $this->homeService = new HomeService(
@@ -41,6 +41,7 @@ class HomeServiceTest extends TestCase
     {
         $photos = [$this->createMock(Photo::class)];
         $this->photoRepository->method('findAllWithUsersFiltered')->willReturn($photos);
+        $this->photoRepository->method('countFiltered')->willReturn(1);
 
         $result = $this->homeService->getPhotosData(null);
 
@@ -57,12 +58,16 @@ class HomeServiceTest extends TestCase
         $photos = [$photo];
 
         $this->photoRepository->method('findAllWithUsersFiltered')->willReturn($photos);
+        $this->photoRepository->method('countFiltered')->willReturn(1);
 
         $userRepo = $this->createMock(EntityRepository::class);
         $userRepo->method('find')->with(1)->willReturn($user);
         $this->em->method('getRepository')->with(User::class)->willReturn($userRepo);
 
-        $this->likeRepository->method('hasUserLikedPhoto')->with($user, $photo)->willReturn(true);
+        $this->likeRepository
+            ->method('getUserLikesForPhotoIds')
+            ->with($user, [5])
+            ->willReturn([5 => true]);
 
         $result = $this->homeService->getPhotosData(1);
 
@@ -75,6 +80,7 @@ class HomeServiceTest extends TestCase
     {
         $photos = [$this->createMock(Photo::class)];
         $this->photoRepository->method('findAllWithUsersFiltered')->willReturn($photos);
+        $this->photoRepository->method('countFiltered')->willReturn(1);
 
         $userRepo = $this->createMock(EntityRepository::class);
         $userRepo->method('find')->willReturn(null);
@@ -91,9 +97,21 @@ class HomeServiceTest extends TestCase
         $filters = ['location' => 'Paris', 'camera' => 'Canon'];
         $this->photoRepository->expects($this->once())
             ->method('findAllWithUsersFiltered')
-            ->with($filters)
+            ->with($filters, 1, 12)
             ->willReturn([]);
+        $this->photoRepository->method('countFiltered')->willReturn(0);
 
         $this->homeService->getPhotosData(null, $filters);
+    }
+
+    public function testGetPhotosDataReturnsPaginationMetadata(): void
+    {
+        $this->photoRepository->method('findAllWithUsersFiltered')->willReturn([]);
+        $this->photoRepository->method('countFiltered')->willReturn(30);
+
+        $result = $this->homeService->getPhotosData(null, [], 2);
+
+        $this->assertSame(2, $result['currentPage']);
+        $this->assertSame(3, $result['totalPages']); // 30 photos / 12 per page = 3 pages
     }
 }

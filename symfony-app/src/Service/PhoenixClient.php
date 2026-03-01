@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Service;
 
 use App\Exception\InvalidPhoenixTokenException;
+use RuntimeException;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 class PhoenixClient implements PhoenixClientInterface
@@ -26,6 +27,12 @@ class PhoenixClient implements PhoenixClientInterface
             throw new InvalidPhoenixTokenException();
         }
 
-        return $response->toArray()['photos'] ?? [];
+        $data = $response->toArray();
+
+        if (!array_key_exists('photos', $data) || !is_array($data['photos'])) {
+            throw new RuntimeException('Unexpected response structure from PhoenixApi');
+        }
+
+        return $data['photos'];
     }
 }

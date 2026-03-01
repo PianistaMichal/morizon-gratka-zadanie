@@ -78,6 +78,23 @@ defmodule PhoenixApiWeb.PhotoControllerTest do
              }
     end
 
+    test "429 response includes Retry-After header", %{conn: conn} do
+      for _ <- 1..5 do
+        conn
+        |> put_req_header("access-token", "valid_test_token_123")
+        |> get("/api/photos")
+      end
+
+      conn =
+        conn
+        |> put_req_header("access-token", "valid_test_token_123")
+        |> get("/api/photos")
+
+      assert conn.status == 429
+      [retry_after] = get_resp_header(conn, "retry-after")
+      assert String.to_integer(retry_after) > 0
+    end
+
     test "per-user limits are independent — other user is not blocked", %{conn: conn} do
       # Exhaust the limit for the first user
       for _ <- 1..5 do

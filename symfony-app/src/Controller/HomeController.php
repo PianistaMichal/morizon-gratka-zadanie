@@ -33,7 +33,8 @@ class HomeController
             'username' => $request->query->get('username', ''),
         ]);
 
-        $data = $this->homeService->getPhotosData($userId, $filters);
+        $page = max(1, (int) $request->query->get('page', '1'));
+        $data = $this->homeService->getPhotosData($userId, $filters, $page);
         $data['filters'] = $request->query->all();
 
         return new Response($this->twig->render('home/index.html.twig', $data));

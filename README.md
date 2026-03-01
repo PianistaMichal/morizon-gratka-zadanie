@@ -46,7 +46,7 @@ Wylogowanie: http://localhost:8000/logout
 `vendor/` żyje w Docker named volume i nie jest widoczny na hoście. Żeby IDE rozpoznawało klasy, skopiuj go z kontenera.
 
 ```bash
-docker cp rekrutacja-gratka-symfony-1:/app/vendor symfony-app/vendor
+docker cp rekrutacja-gratka-symfony-1:/app/vendor symfony-app/
 ```
 
 Uruchamiaj po każdym `docker-compose exec symfony composer require/update`.
@@ -64,6 +64,25 @@ docker-compose exec symfony bin/test
 ```bash
 docker-compose exec -e MIX_ENV=test phoenix mix test
 ```
+
+## Testowanie Phoenix API
+
+Phoenix API nasłuchuje na `http://localhost:4000`. Seed tworzy dwóch użytkowników z tokenami.
+
+```bash
+# Pobierz zdjęcia użytkownika 1
+curl -H "access-token: test_token_user1_abc123" http://localhost:4000/api/photos
+
+# Pobierz zdjęcia użytkownika 2
+curl -H "access-token: test_token_user2_def456" http://localhost:4000/api/photos
+
+# Zły token → 401 Unauthorized
+curl -H "access-token: invalid" http://localhost:4000/api/photos
+
+# Po przekroczeniu limitu (5 żądań / 10 min) → 429 Too Many Requests z Retry-After header
+```
+
+Demo user w Symfony App ma już ustawiony token `test_token_user1_abc123` — kliknięcie "Importuj zdjęcia" na stronie profilu pobierze zdjęcia z Phoenix API bez dodatkowej konfiguracji.
 
 ## Code Quality (Symfony)
 

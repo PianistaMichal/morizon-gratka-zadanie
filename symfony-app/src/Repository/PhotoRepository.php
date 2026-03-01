@@ -6,7 +6,9 @@ namespace App\Repository;
 
 use App\Entity\Photo;
 use DateTimeImmutable;
+use DateTimeZone;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\ORM\QueryBuilder;
 use Doctrine\Persistence\ManagerRegistry;
 use Exception;
 
@@ -38,7 +40,31 @@ class PhotoRepository extends ServiceEntityRepository
      *
      * @return Photo[]
      */
-    public function findAllWithUsersFiltered(array $filters): array
+    public function findAllWithUsersFiltered(array $filters, int $page = 1, int $perPage = 12): array
+    {
+        return $this->buildFilteredQuery($filters)
+            ->setFirstResult(($page - 1) * $perPage)
+            ->setMaxResults($perPage)
+            ->getQuery()
+            ->getResult();
+    }
+
+    /**
+     * @param array<string, string> $filters
+     */
+    public function countFiltered(array $filters): int
+    {
+        return (int) $this->buildFilteredQuery($filters)
+            ->select('COUNT(p.id)')
+            ->resetDQLPart('orderBy')
+            ->getQuery()
+            ->getSingleScalarResult();
+    }
+
+    /**
+     * @param array<string, string> $filters
+     */
+    private function buildFilteredQuery(array $filters): QueryBuilder
     {
         $qb = $this->createQueryBuilder('p')
             ->leftJoin('p.user', 'u')
@@ -62,7 +88,7 @@ class PhotoRepository extends ServiceEntityRepository
 
         if (!empty($filters['taken_at'])) {
             try {
-                $date = new DateTimeImmutable($filters['taken_at']);
+                $date = new DateTimeImmutable($filters['taken_at'], new DateTimeZone('UTC'));
                 $nextDay = $date->modify('+1 day');
                 $qb->andWhere('p.takenAt >= :takenAtStart')
                     ->andWhere('p.takenAt < :takenAtEnd')
@@ -78,6 +104,6 @@ class PhotoRepository extends ServiceEntityRepository
                 ->setParameter('username', '%' . $filters['username'] . '%');
         }
 
-        return $qb->getQuery()->getResult();
+        return $qb;
     }
 }
